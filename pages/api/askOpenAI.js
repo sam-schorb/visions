@@ -1,8 +1,9 @@
 // pages/api/askOpenAI.js
-import OpenAI from "openai";
+import cors, { runMiddleware } from '../../middlewares/cors';
+import OpenAI from 'openai';
 
 const openai = new OpenAI({
-    apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
+    apiKey: process.env['OPENAI_API_KEY'],
 });
 
 const basePrompt = `
@@ -37,6 +38,9 @@ Example:
 let chatHistory = []; // In-memory store for the chat history
 
 export default async function handler(req, res) {
+  // Run the middleware
+  await runMiddleware(req, res, cors);
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
