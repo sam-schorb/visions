@@ -2,10 +2,6 @@
 import cors, { runMiddleware } from '../../middlewares/cors';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-    apiKey: process.env['OPENAI_API_KEY'],
-});
-
 const basePrompt = `
 You are a code generator specialized in producing p5.js sketches. 
 Every input you receive is a request for p5.js code.
@@ -44,16 +40,24 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  
-  const userMessage = req.body.message;
+
+  const { message: userMessage, apiKey } = req.body;
+  if (!apiKey) {
+    return res.status(401).json({ error: 'API key not provided' });
+  }
+
+  const openai = new OpenAI({
+    apiKey: apiKey,
+  });
+
   const newMessage = { role: "user", content: `${basePrompt}${userMessage}` };
   chatHistory.push(newMessage);
 
   try {
     const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: chatHistory,
-        max_tokens: 1000,
+      model: "gpt-4o",
+      messages: chatHistory,
+      max_tokens: 1000,
     });
 
     const assistantMessage = response.choices[0].message;

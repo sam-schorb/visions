@@ -41,9 +41,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const userMessage = req.body.message;
-  const apiKey = req.headers['x-api-key']; // Get the API key from the request headers
-
+  const { message: userMessage, apiKey } = req.body;
   if (!apiKey) {
     return res.status(401).json({ error: 'API key not provided' });
   }
