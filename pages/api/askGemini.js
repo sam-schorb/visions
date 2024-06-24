@@ -1,5 +1,6 @@
 // pages/api/askGemini.js
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import cors, { runMiddleware } from '../../middlewares/cors';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 let chatInstance = null; // In-memory store for the chat instance
 
@@ -33,6 +34,9 @@ Example:
 `;
 
 export default async function handler(req, res) {
+  // Run the middleware
+  await runMiddleware(req, res, cors);
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -46,7 +50,7 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     if (!chatInstance) {
       // Start a new chat if there is no existing instance
