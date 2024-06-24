@@ -32,7 +32,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadNewSketch, setLoadNewSketch] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [apiMode, setApiMode] = useState('API_PROD_MODE');
   const [selectedAPI, setSelectedAPI] = useState('gpt-4o');
   const [selectedAPIKey, setSelectedAPIKey] = useState('');
   const [notification, setNotification] = useState({ isVisible: false, message: '' });
@@ -67,7 +66,6 @@ export default function Home() {
     };
   }, [isFullscreen]);
 
-
   const showNotification = (message) => {
     setNotification({ isVisible: true, message });
   };
@@ -76,7 +74,6 @@ export default function Home() {
     setNotification({ isVisible: false, message: '' });
   };
 
-  
   useEffect(() => {
     console.log('Frame Width:', frameWidth);
     console.log('Frame Height:', frameHeight);
@@ -85,7 +82,7 @@ export default function Home() {
       p5Ref.current.resizeCanvas(frameWidth, frameHeight);
     }
   }, [frameWidth, frameHeight]);
-  
+
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
   };
@@ -202,22 +199,9 @@ export default function Home() {
   
     const message = inputValue.trim() === '' ? 'improve the sketch in some way, if no sketch is present then make a simple sketch' : inputValue;
   
-    let apiEndpoint;
-    let apiKey;
-  
-    if (apiMode === 'API_DEV_MODE') {
-      if (selectedAPI === 'gpt-4o') {
-        apiEndpoint = '/api/askOpenAI';
-        apiKey = process.env.OPENAI_API_KEY;
-      } else {
-        apiEndpoint = '/api/askGemini';
-        apiKey = process.env.API_KEY;
-      }
-    } else {
-      apiEndpoint = selectedAPIKey.provider === 'OpenAI' ? '/api/askOpenAI' : '/api/askGemini';
-      apiKey = selectedAPIKey.apiKey; // Use the selected API key from the API Modal
-      console.log(selectedAPIKey)
-    }
+    const apiEndpoint = selectedAPIKey.provider === 'OpenAI' ? '/api/askOpenAI' : '/api/askGemini';
+    const apiKey = selectedAPIKey.apiKey; // Use the selected API key from the API Modal
+    console.log(selectedAPIKey);
   
     try {
       const response = await submitToAPI(apiEndpoint, message, apiKey);
@@ -279,7 +263,7 @@ export default function Home() {
 
       // When setting the sketch, wrap it again
       setSketch(`${modifiedSketchCode}`);
-      console.log(modifiedSketchCode)
+      console.log(modifiedSketchCode);
   
       if (p5Ref.current) {
         const params = {};
@@ -317,7 +301,7 @@ export default function Home() {
         const defaultValue = paramDefaults[paramName];
         const scaledValue = defaultValue * Math.pow(10, (paramValue - 50) / 50);
         p5Ref.current.setSingleParam(paramName, scaledValue);
-        console.log('newSliderValue', paramName, scaledValue)
+        console.log('newSliderValue', paramName, scaledValue);
       }
     }
   };
@@ -373,72 +357,72 @@ export default function Home() {
     return paramNames.filter(name => !selectedParams.includes(name) || sliders[index].param === name);
   };
 
- // main file
- return (
-  <div>
-    <Head>
-      <title>p5.js with Next.js</title>
-      <meta name="description" content="Render p5.js sketches in a Next.js app" />
-    </Head>
-    <main ref={componentRef} className="flex flex-col w-full items-center lg:flex-row lg:items-start h-screen">
-      <div className="flex justify-center">
-        <Canvas
-          sketchRef={sketchRef}
-          renderKey={renderKey}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={toggleFullscreen}
-          frameWidth={frameWidth}
-          frameHeight={frameHeight}
-        />
-      </div>
-      {!isFullscreen && (
-        <div className="md:p-10 p-4 w-full lg:w-auto">
-          <SketchControls
-            onSubmit={handleSubmit}
-            inputValue={inputValue}
-            onInputChange={(e) => setInputValue(e.target.value)}
-            selectedAPI={selectedAPI}
-            onAPIChange={(e) => setSelectedAPI(e.target.value)}
-            onSnapshot={takeSnapshot}
-            onToggleCodeModal={toggleCodeModal}
-            onToggleHelpModal={toggleHelpModal}
-            onToggleAPIModal={handleToggleAPIModal}
-            onResetSketch={resetSketch}
-            isLoading={isLoading}
-            onNewSketch={() => setLoadNewSketch(true)}
+  // main file
+  return (
+    <div>
+      <Head>
+        <title>p5.js with Next.js</title>
+        <meta name="description" content="Render p5.js sketches in a Next.js app" />
+      </Head>
+      <main ref={componentRef} className="flex flex-col w-full items-center lg:flex-row lg:items-start h-screen">
+        <div className="flex justify-center">
+          <Canvas
+            sketchRef={sketchRef}
+            renderKey={renderKey}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
+            frameWidth={frameWidth}
+            frameHeight={frameHeight}
           />
-          <div>
-          <SketchDisplay
-            sliders={sliders}
-            onSliderChange={handleSliderChange}
-            onParamChange={handleParamChange}
-            onRemoveSlider={removeSlider}
-            getAvailableParams={getAvailableParams}
-            onAddSlider={addSlider}
-          />
-          </div>
         </div>
-      )}
-    </main>
-    <CodeModal 
-      isOpen={isCodeModalOpen} 
-      onClose={toggleCodeModal} 
-      displayedCode={modalSketchCode} 
-      onSave={loadEditedSketch}
-    />
-    <HelpModal isOpen={isHelpModalOpen} onClose={toggleHelpModal} />
-    <APIModal
-      isOpen={isAPIModalOpen}
-      onClose={handleToggleAPIModal}
-      onSelectAPIKey={setSelectedAPIKey}
-      selectedAPI={selectedAPI}
-      onAPIChange={setSelectedAPI}
-    />
-    <Notification
-      message={notification.message}
-      isVisible={notification.isVisible}
-      onClose={closeNotification}
-    />
-  </div>
-);
-};
+        {!isFullscreen && (
+          <div className="md:p-10 p-4 w-full lg:w-auto">
+            <SketchControls
+              onSubmit={handleSubmit}
+              inputValue={inputValue}
+              onInputChange={(e) => setInputValue(e.target.value)}
+              selectedAPI={selectedAPI}
+              onAPIChange={(e) => setSelectedAPI(e.target.value)}
+              onSnapshot={takeSnapshot}
+              onToggleCodeModal={toggleCodeModal}
+              onToggleHelpModal={toggleHelpModal}
+              onToggleAPIModal={handleToggleAPIModal}
+              onResetSketch={resetSketch}
+              isLoading={isLoading}
+              onNewSketch={() => setLoadNewSketch(true)}
+            />
+            <div>
+              <SketchDisplay
+                sliders={sliders}
+                onSliderChange={handleSliderChange}
+                onParamChange={handleParamChange}
+                onRemoveSlider={removeSlider}
+                getAvailableParams={getAvailableParams}
+                onAddSlider={addSlider}
+              />
+            </div>
+          </div>
+        )}
+      </main>
+      <CodeModal 
+        isOpen={isCodeModalOpen} 
+        onClose={toggleCodeModal} 
+        displayedCode={modalSketchCode} 
+        onSave={loadEditedSketch}
+      />
+      <HelpModal isOpen={isHelpModalOpen} onClose={toggleHelpModal} />
+      <APIModal
+        isOpen={isAPIModalOpen}
+        onClose={handleToggleAPIModal}
+        onSelectAPIKey={setSelectedAPIKey}
+        selectedAPI={selectedAPI}
+        onAPIChange={setSelectedAPI}
+      />
+      <Notification
+        message={notification.message}
+        isVisible={notification.isVisible}
+        onClose={closeNotification}
+      />
+    </div>
+  );
+}

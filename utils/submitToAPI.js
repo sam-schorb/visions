@@ -4,9 +4,8 @@ export const submitToAPI = async (apiEndpoint, inputValue, apiKey) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`, // Add the API key to the request headers
       },
-      body: JSON.stringify({ message: inputValue }),
+      body: JSON.stringify({ message: inputValue, apiKey: apiKey }),
     });
     const data = await response.json();
     return data.response;
