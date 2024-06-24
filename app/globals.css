@@ -1,0 +1,47 @@
+@import './fonts.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  min-height: 100vh;
+  background: linear-gradient(0deg, rgba(56,56,59,1) 0%, rgba(22,22,31,1) 100%);
+  background-attachment: fixed;
+  font-family: 'Euclid Circular A', sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+.fullscreen {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999; /* Ensure it stays on top of other elements */
+}
+
+.fullscreen .absolute {
+  position: fixed !important; /* Ensure the button stays fixed in fullscreen mode */
+  bottom: 10px;
+  right: 10px;
+}
