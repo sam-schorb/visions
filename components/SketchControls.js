@@ -1,15 +1,24 @@
 'use client'
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from './ui/button';
 import Input from './ui/input';
 import { FaPlus, FaCode, FaRedo, FaCamera, FaQuestion, FaKey, FaMagic } from 'react-icons/fa';
 import HashLoader from 'react-spinners/HashLoader';
 
+const placeholders = [
+  "Type an idea, e.g. Raining blue triangles...",
+  "Type an idea, e.g. Bouncing balls grow when they touch...",
+  "Type an idea, e.g. Psychedelic controllable spirograph...",
+  "Type an idea, e.g. Echoing warping hyper cube...",
+  "Type an idea, e.g. Recursive flowers...",
+  "Type an idea, e.g. Rainbow snake follows the mouse...",
+  "Type an idea, e.g. Simulate a black hole...",
+  "Type an idea, e.g. Detailed water painting game..."
+];
+
 const SketchControls = ({
   onSubmit,
-  inputValue,
-  onInputChange,
   onSnapshot,
   onToggleCodeModal,
   onToggleHelpModal,
@@ -18,14 +27,32 @@ const SketchControls = ({
   onNewSketch,
   isLoading,
 }) => {
+  const [inputValue, setInputValue] = useState('');
+  const [placeholder, setPlaceholder] = useState('');
+
+  useEffect(() => {
+    setPlaceholder(placeholders[Math.floor(Math.random() * placeholders.length)]);
+  }, []);
+
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    onSubmit(e);
+    onSubmit(e, inputValue);
+    setInputValue(''); // Clear the input after submission
+    // Change placeholder after submission
+    setPlaceholder(placeholders[Math.floor(Math.random() * placeholders.length)]);
+  };
+
+  const handleSnapshotClick = () => {
+    onSnapshot();
   };
 
   return (
     <div>
-      <div className="flex flex-wrap justify-between lg:justify-start md:space-x-2 pb-10">
+      <div className="flex flex-wrap justify-between lg:justify-start md:space-x-2 pb-6">
         <Button variant="default" size="default" onClick={onNewSketch} className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0">
           <FaPlus />
           <span className="hidden md:inline">New</span>
@@ -42,7 +69,12 @@ const SketchControls = ({
           <FaRedo />
           <span className="hidden md:inline">Reset</span>
         </Button>
-        <Button variant="default" size="default" onClick={onSnapshot} className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0">
+        <Button
+          variant="default"
+          size="default"
+          onClick={handleSnapshotClick}
+          className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0"
+        >
           <FaCamera />
           <span className="hidden md:inline">Photo</span>
         </Button>
@@ -57,9 +89,9 @@ const SketchControls = ({
             <>
               <Input
                 type="text"
-                placeholder="Enter text"
+                placeholder={placeholder}
                 value={inputValue}
-                onChange={onInputChange}
+                onChange={handleInputChange}
                 style={{ width: '100%', backgroundColor: 'bg-black', color: 'bg-gray-500' }}
                 className="bg-black text-gray-300"
               />

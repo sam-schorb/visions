@@ -2,12 +2,12 @@
 
 window.sketch4 = 
 (p) => {
-  let width = 800
+  let width = 400
   let height = 800
   let flowSpeed = 0.01;
   let waveAmplitude = 50;
   let waveFrequency = 0.1;
-  let gridSize = 20;
+  let gridSize = 80;
   let colorCycleSpeed = 0.02;
 
   p.setup = () => {

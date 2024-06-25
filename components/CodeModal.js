@@ -8,6 +8,7 @@ import { FaCopy, FaEdit, FaSave, FaTimes, FaBan } from 'react-icons/fa';
 const CodeModal = ({ isOpen, onClose, displayedCode, onSave }) => {
   const [editMode, setEditMode] = useState(false);
   const [editedCode, setEditedCode] = useState(displayedCode);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     setEditedCode(displayedCode);
@@ -16,7 +17,7 @@ const CodeModal = ({ isOpen, onClose, displayedCode, onSave }) => {
   useEffect(() => {
     const handleOutsideClick = (event) => {
       if (event.target.id === 'code-modal-overlay') {
-        onClose();
+        closeModalWithTransition();
       }
     };
 
@@ -28,6 +29,14 @@ const CodeModal = ({ isOpen, onClose, displayedCode, onSave }) => {
       window.removeEventListener('click', handleOutsideClick);
     };
   }, [isOpen, onClose]);
+
+  const closeModalWithTransition = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 1000);
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(editMode ? editedCode : displayedCode).then(() => {
@@ -49,205 +58,140 @@ const CodeModal = ({ isOpen, onClose, displayedCode, onSave }) => {
     onSave(editedCode);
   };
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen && !isClosing) return null;
 
   return (
-    <div
-      id="code-modal-overlay"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <div
-        style={{
-          position: 'relative',
-          width: '50%',
-          height: 'calc(50% + 60px)',
-          backgroundColor: '#D3D3D3',
-          color: 'black',
-          borderRadius: '10px',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <div
-          style={{
-            position: 'relative',
-            height: '60px',
-            backgroundColor: '#A9A9A9',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderTopLeftRadius: '10px',
-            borderTopRightRadius: '10px',
-          }}
-        >
-          <h2 style={{ color: 'white', fontSize: '24px' }}>Code Viewer</h2>
-          <button
-            onClick={onClose}
-            style={{
-              position: 'absolute',
-              top: '17px',
-              right: '20px',
-              background: 'none',
-              color: 'black',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-          >
-            <FaTimes />
-          </button>
-        </div>
-        <div style={{ flex: 1, overflow: 'auto', padding: '30px' }}>
-          {editMode ? (
-            <Textarea
-              value={editedCode}
-              onChange={(e) => setEditedCode(e.target.value)}
-              style={{
-                width: '100%',
-                height: 'calc(105%)',
-                color: 'black',
-                fontFamily: 'monospace',
-                padding: '10px',
-                boxSizing: 'border-box',
-              }}
-            />
-          ) : (
-            <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'black' }}>
-              {displayedCode}
-            </pre>
-          )}
-        </div>
-        {!editMode && (
-          <div
-            style={{
-              position: 'sticky',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: '60px',
-              backgroundColor: '#A9A9A9',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingLeft: '30px',
-              paddingRight: '30px',
-              borderBottomLeftRadius: '10px',
-              borderBottomRightRadius: '10px',
-            }}
-          >
+    <>
+      <style jsx>{`
+        @keyframes modalOpenAnimation {
+          from {
+            width: 100%;
+            height: 0;
+            background: rgba(0, 0, 0, 0);
+            border: 0px;
+          }
+          to {
+            width: min(90%, 800px);
+            height: 80%;
+            background: rgba(211, 211, 211, 1);
+            border: 1px solid white;
+          }
+        }
+        #code-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: opacity 1s;
+          opacity: 1;
+        }
+        #code-modal-overlay.hidden {
+          opacity: 0;
+          pointer-events: none;
+        }
+        #code-modal {
+          position: relative;
+          width: min(90%, 800px);
+          height: 80%;
+          background-color: #D3D3D3;
+          color: black;
+          border-radius: 10px;
+          display: flex;
+          flex-direction: column;
+          transition: width 1s, height 1s, background 1s, border 1s;
+        }
+        #code-modal.opening {
+          animation: modalOpenAnimation 1s forwards;
+        }
+        #code-modal.hidden {
+          width: 100%;
+          height: 0;
+          background: rgba(211, 211, 211, 0);
+          border: 0px;
+        }
+        .modal-header, .modal-footer {
+          height: 60px;
+          background-color: #A9A9A9;
+        }
+        .modal-header {
+          border-top-left-radius: 10px;
+          border-top-right-radius: 10px;
+        }
+        .modal-footer {
+          border-bottom-left-radius: 10px;
+          border-bottom-right-radius: 10px;
+        }
+        .modal-content {
+          flex: 1;
+          overflow: auto;
+          padding: 30px;
+          max-width: 100%;
+        }
+      `}</style>
+
+      <div id="code-modal-overlay" className={isClosing ? 'hidden' : ''}>
+        <div id="code-modal" className={`${isOpen ? 'opening' : ''} ${isClosing ? 'hidden' : ''}`}>
+          <div className="modal-header flex items-center justify-center relative">
+            <h2 className="text-white text-2xl">Code Viewer</h2>
+            <button
+              onClick={closeModalWithTransition}
+              className="absolute top-[17px] right-5 bg-transparent text-black border-none cursor-pointer text-base"
+            >
+              <FaTimes />
+            </button>
+          </div>
+          <div className="modal-content">
+            {editMode ? (
+              <Textarea
+                value={editedCode}
+                onChange={(e) => setEditedCode(e.target.value)}
+                className="w-full h-[calc(100%)] text-black font-mono p-2.5 box-border whitespace-pre overflow-x-auto"
+              />
+            ) : (
+              <pre className="whitespace-pre overflow-x-auto text-black m-0 p-0">
+                {displayedCode}
+              </pre>
+            )}
+          </div>
+          <div className={`modal-footer flex items-center justify-between px-8 ${editMode ? 'bg-[#D3D3D3]' : ''}`}>
             <Button
               onClick={handleCopy}
-              style={{
-                background: 'blue',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                padding: '5px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
+              className="bg-blue-500 text-white border-none rounded p-1.5 cursor-pointer flex items-center"
             >
-              <FaCopy style={{ marginRight: '5px' }} /> Copy
+              <FaCopy className="mr-1.5" /> Copy
             </Button>
-            <Button
-              onClick={handleEdit}
-              style={{
-                background: 'green',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                padding: '5px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <FaEdit style={{ marginRight: '5px' }} /> Edit
-            </Button>
-          </div>
-        )}
-        {editMode && (
-          <div
-            style={{
-              position: 'sticky',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: '60px',
-              backgroundColor: '#D3D3D3',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingLeft: '30px',
-              paddingRight: '30px',
-              borderBottomLeftRadius: '10px',
-              borderBottomRightRadius: '10px',
-            }}
-          >
-            <Button
-              onClick={handleCopy}
-              style={{
-                background: 'blue',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                padding: '5px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <FaCopy style={{ marginRight: '5px' }} /> Copy
-            </Button>
-            <div style={{ display: 'flex', gap: '10px' }}>
+            {editMode ? (
+              <div className="flex gap-2.5">
+                <Button
+                  onClick={handleSave}
+                  className="bg-green-500 text-white border-none rounded p-1.5 cursor-pointer flex items-center"
+                >
+                  <FaSave className="mr-1.5" /> Save
+                </Button>
+                <Button
+                  onClick={handleCancel}
+                  className="bg-gray-500 text-white border-none rounded p-1.5 cursor-pointer flex items-center"
+                >
+                  <FaBan className="mr-1.5" /> Cancel
+                </Button>
+              </div>
+            ) : (
               <Button
-                onClick={handleSave}
-                style={{
-                  background: 'green',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  padding: '5px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
+                onClick={handleEdit}
+                className="bg-green-500 text-white border-none rounded p-1.5 cursor-pointer flex items-center"
               >
-                <FaSave style={{ marginRight: '5px' }} /> Save
+                <FaEdit className="mr-1.5" /> Edit
               </Button>
-              <Button
-                onClick={handleCancel}
-                style={{
-                  background: 'gray',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  padding: '5px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <FaBan style={{ marginRight: '5px' }} /> Cancel
-              </Button>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

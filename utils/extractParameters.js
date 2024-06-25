@@ -40,12 +40,9 @@ export function insertParameterNames(sketchCode, parameterNames) {
   p.setParams = (newParams) => {
     ${parameterNames.map((name, index) => `if (newParams[${index}] !== undefined) ${name} = newParams[${index}];`).join('\n    ')}
   };`;
-  
-      console.log('paramsCode', setParamsCode);
-  
+    
       // Remove the final }; and append the setParamsCode, then add the final };
       const updatedSketchCode = sketchCode.replace(/(\s*}\s*;\s*)$/, `${setParamsCode}\n$1`);
-      console.log('updatedSketchCode', updatedSketchCode);
   
       resolve(updatedSketchCode);
     });
@@ -61,18 +58,13 @@ p.setSingleParam = (paramName, paramValue) => {
     ${parameterNames.map(name => `
     if (paramName === '${name}') {
         ${name} = paramValue;
-        console.log('Single param updated:', paramName, paramValue);
     }`).join('\n    ')}
 };`;
 
     const setParamsCode = `
 p.setParams = (params) => {
-    console.log('Setting multiple params:', params);
     ${parameterNames.map(name => `if (params.${name} !== undefined) ${name} = params.${name};`).join('\n    ')}
     p.setParamsFromSliders();
-    console.log('Current param values:', {
-        ${parameterNames.map(name => `${name}`).join(', ')}
-    });
 };
 `;
 
@@ -91,9 +83,6 @@ for (let key in sliders) {
         setParamsFromSlidersCode: `
 p.setParamsFromSliders = () => {
     ${setParamsFromSliders}
-    console.log('Params from sliders updated:', {
-        ${parameterNames.map(name => `${name}`).join(', ')}
-    });
 };
 `,
         setSingleParamCode: setSingleParamCode,

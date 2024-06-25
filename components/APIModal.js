@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Button from './ui/button';
 import Input from "./ui/input";
 import { RadioGroup, RadioGroupItem } from "./ui/radiogroup";
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaTimes } from 'react-icons/fa';
 import {
   Select,
   SelectContent,
@@ -19,6 +19,7 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
   const [rows, setRows] = useState([{ apiKey: '', provider: '', selected: true }]);
   const [availableProviders, setAvailableProviders] = useState(['OpenAI', 'Gemini']);
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     if (rows.length === 1) {
@@ -36,7 +37,7 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
   useEffect(() => {
     const handleOutsideClick = (event) => {
       if (event.target.id === 'api-modal-overlay') {
-        onClose();
+        closeModalWithTransition();
       }
     };
 
@@ -48,6 +49,14 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
       window.removeEventListener('click', handleOutsideClick);
     };
   }, [isOpen, onClose]);
+
+  const closeModalWithTransition = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 1000);
+  };
 
   const handleAddRow = () => {
     if (rows.length < 5) {
@@ -87,128 +96,170 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
     setSelectedRowIndex(index);
   };
 
-  useEffect(() => {
-    const selectedAPI = rows[selectedRowIndex];
-    if (selectedAPI) {
-      console.log('Selected API:', selectedAPI);
-    }
-  }, [rows, selectedRowIndex]);
-
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen && !isClosing) return null;
 
   return (
-    <div
-      id="api-modal-overlay"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <div
-        style={{
-          position: 'relative',
-          width: '50%',
-          height: '50%',
-          backgroundColor: '#D3D3D3',
-          overflow: 'auto',
-          color: 'black',
-          borderRadius: '10px',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '60px',
-            backgroundColor: '#A9A9A9',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderTopLeftRadius: '10px',
-            borderTopRightRadius: '10px',
-          }}
-        >
-          <h2 style={{ color: 'white', fontSize: '24px' }}>API</h2>
-        </div>
-        <div style={{ marginTop: '80px', paddingLeft: '30px' }}>
-          <button
-            onClick={onClose}
-            style={{
-              position: 'absolute',
-              top: '17px',
-              right: '20px',
-              background: 'none',
-              color: 'black',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-          >
-            X
-          </button>
-          <h3 style={{ paddingBottom: '20px' }}>Input API keys and select a provider</h3>
-          <RadioGroup value={selectedRowIndex.toString()} onValueChange={(value) => handleSelectRow(parseInt(value))}>
-            {rows.map((row, index) => (
-              <div key={index} style={{ paddingBottom: '20px', display: 'flex', alignItems: 'center' }}>
-                <RadioGroupItem
-                  value={index.toString()}
-                  id={`option-${index}`}
-                  style={{ marginRight: '10px' }}
-                />
-                <Input
-                  type="text"
-                  placeholder="Enter your API key"
-                  value={row.apiKey}
-                  onChange={(e) => handleAPIKeyChange(index, e.target.value)}
-                  style={{ marginRight: '10px', width: '300px' }}
-                />
-                <Select onValueChange={(value) => handleProviderChange(index, value)}>
-                  <SelectTrigger className="w-[200px] px-2 py-1 text-black bg-white border border-gray-300 rounded text-left">
-                    <SelectValue placeholder={row.provider || "Select Provider"} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white text-black" style={{ width: '200px' }}>
-                    <SelectGroup>
-                      <SelectLabel>Providers</SelectLabel>
-                      {availableProviders.map((provider) => (
-                        <SelectItem key={provider} value={provider} className="hover:bg-gray-200">
-                          {provider}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                <button
-                  onClick={() => handleRemoveRow(index)}
-                  style={{
-                    marginLeft: '10px',
-                    background: 'none',
-                    color: 'black',
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  X
-                </button>
-              </div>
-            ))}
-          </RadioGroup>
-          <Button variant="default" size="default" onClick={handleAddRow} disabled={rows.length >= 5}>
-            <FaPlus className="mr-2" /> Add
-          </Button>
+    <>
+      <style jsx>{`
+        @keyframes modalOpenAnimation {
+          from {
+            width: 100%;
+            height: 0;
+            background: rgba(0, 0, 0, 0);
+            border: 0px;
+          }
+          to {
+            width: min(90%, 800px);
+            height: 80%;
+            background: rgba(211, 211, 211, 1);
+            border: 1px solid white;
+          }
+        }
+        #api-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: opacity 1s;
+          opacity: 1;
+        }
+        #api-modal-overlay.hidden {
+          opacity: 0;
+          pointer-events: none;
+        }
+        #api-modal {
+          position: relative;
+          width: min(90%, 800px);
+          height: 80%;
+          background-color: #D3D3D3;
+          overflow: auto;
+          color: black;
+          border-radius: 10px;
+          transition: width 1s, height 1s, background 1s, border 1s;
+        }
+        #api-modal.opening {
+          animation: modalOpenAnimation 1s forwards;
+        }
+        #api-modal.hidden {
+          width: 100%;
+          height: 0;
+          background: rgba(211, 211, 211, 0);
+          border: 0px;
+        }
+        .modal-header {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 60px;
+          background-color: #A9A9A9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-top-left-radius: 10px;
+          border-top-right-radius: 10px;
+        }
+        .modal-content {
+          margin-top: 80px;
+          padding-left: 30px;
+          padding-right: 30px;
+          padding-bottom: 30px;
+        }
+        .input-select-container {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
+        }
+        .api-input {
+          flex-grow: 1;
+          min-width: 0;
+        }
+        .provider-select {
+          width: 200px;
+          flex-shrink: 0;
+        }
+        @media (max-width: 640px) {
+          .input-select-container {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .provider-select {
+            width: 100%;
+          }
+        }
+      `}</style>
+
+      <div id="api-modal-overlay" className={isClosing ? 'hidden' : ''}>
+        <div id="api-modal" className={`${isOpen ? 'opening' : ''} ${isClosing ? 'hidden' : ''}`}>
+          <div className="modal-header">
+            <h2 className="text-white text-2xl">API</h2>
+            <button
+              onClick={closeModalWithTransition}
+              className="absolute top-[17px] right-5 bg-transparent text-black border-none cursor-pointer text-base"
+            >
+              <FaTimes />
+            </button>
+          </div>
+          <div className="modal-content">
+            <h3 className="pb-5">Input API keys and select a provider</h3>
+            <RadioGroup value={selectedRowIndex.toString()} onValueChange={(value) => handleSelectRow(parseInt(value))}>
+              {rows.map((row, index) => (
+                <div key={index} className="pb-5 flex items-center">
+                  <RadioGroupItem
+                    value={index.toString()}
+                    id={`option-${index}`}
+                    className="mr-2.5"
+                  />
+                  <div className="input-select-container">
+                    <Input
+                      type="text"
+                      placeholder="Enter your API key"
+                      value={row.apiKey}
+                      onChange={(e) => handleAPIKeyChange(index, e.target.value)}
+                      className="api-input"
+                    />
+                    <Select
+                      onValueChange={(value) => handleProviderChange(index, value)}
+                      value={row.provider} // Set the selected value here
+                      className="provider-select"
+                    >
+                      <SelectTrigger className="px-2 py-1 text-black bg-white border border-gray-300 rounded text-left">
+                        <SelectValue>{row.provider || "Select Provider"}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="bg-white text-black">
+                        <SelectGroup>
+                          <SelectLabel>Providers</SelectLabel>
+                          {availableProviders.map((provider) => (
+                            <SelectItem key={provider} value={provider} className="hover:bg-gray-200">
+                              {provider}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveRow(index)}
+                    className="ml-2.5 bg-transparent text-black border-none cursor-pointer"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+              ))}
+            </RadioGroup>
+            <Button variant="default" size="default" onClick={handleAddRow} disabled={rows.length >= 5}>
+              <FaPlus className="mr-2" /> Add
+              </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
