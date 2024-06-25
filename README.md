@@ -1,7 +1,5 @@
 # Visions - AI-Assisted Visual Synthesis
 
-![Visions Logo](path/to/logo.png)
-
 ## Table of Contents
 - [Overview](#overview)
 - [Features](#features)
@@ -74,11 +72,3 @@ We welcome contributions to Visions! Whether it's bug reports, feature requests,
 ## License
 
 This project is open-source and available under the [MIT License](LICENSE).
-
----
-
-<p align="center">
-  <img src="path/to/footer-image.png" alt="Visions Footer" width="200">
-  <br>
-  <i>Empowering creativity through AI and code</i>
-</p>
