@@ -23,7 +23,7 @@ export default function Home() {
   const [sketch, setSketch] = useState('');
   const [sliders, setSliders] = useState([]);
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
-  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(true);
   const [isAPIModalOpen, setIsAPIModalOpen] = useState(false);
   const [modalSketchCode, setModalSketchCode] = useState('');
   const [renderKey, setRenderKey] = useState(0);
@@ -75,8 +75,6 @@ export default function Home() {
   };
 
   useEffect(() => {
-    console.log('Frame Width:', frameWidth);
-    console.log('Frame Height:', frameHeight);
   
     if (p5Ref.current) {
       p5Ref.current.resizeCanvas(frameWidth, frameHeight);
@@ -89,7 +87,14 @@ export default function Home() {
 
   useEffect(() => {
     if (loadNewSketch) {
-      const sketchNumber = Math.floor(Math.random() * 5) + 1;
+      // Get the current sketch number
+      const currentSketchNumber = sketch.match(/sketch(\d+)/)?.[1];
+      
+      let sketchNumber;
+      do {
+        sketchNumber = Math.floor(Math.random() * 5) + 1;
+      } while (sketchNumber.toString() === currentSketchNumber);
+  
       import(`../sketches/sketch${sketchNumber}.js`)
         .then(module => {
           const sketchCode = module.default;
@@ -108,11 +113,11 @@ export default function Home() {
           setLoadNewSketch(false);
         })
         .catch(error => {
-          console.error('Error loading sketch:', error);
+          console.error('Error loading new sketch:', error);
           showNotification('Error loading new sketch.');
         });
     }
-  }, [loadNewSketch]);
+  }, [loadNewSketch, sketch]);
 
   useEffect(() => {
     if (!sketch) {
@@ -148,41 +153,22 @@ export default function Home() {
         defaultValue: paramDefaults[param] || 1
       }));
       setSliders(updatedSliders);
-      console.log('updatedSlidrs', updatedSliders)
     }
   }, [paramNames, paramDefaults]);
 
   useEffect(() => {
-    const setParamsAsync = async () => {
-      if (p5Ref.current && p5Ref.current.setParams) {
-        const params = sliders.reduce((acc, item) => {
-          if (item.param) {
-            const defaultValue = paramDefaults[item.param] || 1;
-            acc[item.param] = defaultValue * Math.pow(10, (item.value - 50) / 50);
-          }
-          return acc;
-        }, {});
-
-        const trySetParams = async (attempts = 0) => {
-          if (typeof p5Ref.current.setParamsFromSliders === 'function') {
-            p5Ref.current.setParamsFromSliders(params);
-            console.log('params', params)
-          } else if (attempts < 5) {
-            // Retry after a short delay if the function is not available yet
-            await new Promise((resolve) => setTimeout(resolve, 100));
-            trySetParams(attempts + 1);
-          } else {
-            console.warn('setParamsFromSliders function is not available after multiple attempts');
-            // Fallback logic or error handling
-          }
-        };
-
-        await trySetParams();
-      }
-    };
-
-    setParamsAsync();
-  }, [sliders]);
+    if (p5Ref.current && p5Ref.current.setParamsFromSliders) {
+      const params = sliders.reduce((acc, item) => {
+        if (item.param) {
+          const defaultValue = paramDefaults[item.param] || 1;
+          acc[item.param] = defaultValue * Math.pow(10, (item.value - 50) / 50);
+        }
+        return acc;
+      }, {});
+  
+      p5Ref.current.setParamsFromSliders(params);
+    }
+  }, [sliders, paramDefaults]);
 
   const takeSnapshot = () => {
     if (p5Ref.current) {
@@ -201,7 +187,6 @@ export default function Home() {
   
     const apiEndpoint = selectedAPIKey.provider === 'OpenAI' ? '/api/askOpenAI' : '/api/askGemini';
     const apiKey = selectedAPIKey.apiKey; // Use the selected API key from the API Modal
-    console.log(selectedAPIKey);
   
     try {
       const response = await submitToAPI(apiEndpoint, message, apiKey);
@@ -263,7 +248,6 @@ export default function Home() {
 
       // When setting the sketch, wrap it again
       setSketch(`${modifiedSketchCode}`);
-      console.log(modifiedSketchCode);
   
       if (p5Ref.current) {
         const params = {};
@@ -301,7 +285,6 @@ export default function Home() {
         const defaultValue = paramDefaults[paramName];
         const scaledValue = defaultValue * Math.pow(10, (paramValue - 50) / 50);
         p5Ref.current.setSingleParam(paramName, scaledValue);
-        console.log('newSliderValue', paramName, scaledValue);
       }
     }
   };
@@ -314,7 +297,7 @@ export default function Home() {
     setSliders(updatedSliders);
   };
 
-  const MAX_SLIDERS = 12;
+  const MAX_SLIDERS = 10;
 
   const addSlider = () => {
     if (sliders.length < MAX_SLIDERS) {

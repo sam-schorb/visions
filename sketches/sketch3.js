@@ -2,10 +2,7 @@
 
 window.sketch3 = (p) => {
 
-  let angleX = 0;
-  let angleY = 0;
-  let recursionDepth = 4;
-  let prismSize = 200;
+  let prismSize = 80;
   let flowSpeed = 0.01;
   let waveAmplitude = 50;
   let waveFrequency = 0.1;
@@ -16,12 +13,15 @@ window.sketch3 = (p) => {
     p.frameRate(60);
   };
 
+  let angleX = 0;
+  let angleY = 0;
+
   p.draw = () => {
     p.background(0);
     p.lights();
     p.rotateX(angleX);
     p.rotateY(angleY);
-    drawPrism(0, 0, 0, prismSize, recursionDepth);
+    drawPrism(0, 0, 0, prismSize, 4);
     angleX += 0.01;
     angleY += 0.01;
   };

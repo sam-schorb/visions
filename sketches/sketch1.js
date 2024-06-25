@@ -1,7 +1,7 @@
 // sketches/sketch1.js
 
 window.sketch1 = (p) => {
-  let numLayers = 100;
+  let numLayers = 20;
   let spiralStep = 5;
   let baseRadius = 10;
   let colorShiftSpeed = 0.01;
