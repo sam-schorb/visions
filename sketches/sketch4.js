@@ -1,7 +1,6 @@
 // sketches/sketch4.js
 
-window.sketch4 = 
-(p) => {
+window.sketch4 = (p) => {
   let width = 400
   let height = 800
   let flowSpeed = 0.01;
