@@ -1,9 +1,9 @@
 {
     "functions": {
-      "api/askOpenAI": {
+      "pages/api/askOpenAI": {
         "maxDuration": 60
       },
-      "api/askGemini": {
+      "pages/api/askGemini": {
         "maxDuration": 60
       }
     }
