@@ -1,0 +1,11 @@
+{
+    "functions": {
+      "api/askOpenAI": {
+        "maxDuration": 120
+      },
+      "api/askGemini": {
+        "maxDuration": 120
+      }
+    }
+  }
+  

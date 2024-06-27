@@ -1,4 +1,3 @@
-// pages/api/askGemini.js
 import cors, { runMiddleware } from '../../middlewares/cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -34,6 +33,9 @@ Example:
 `;
 
 export default async function handler(req, res) {
+  console.log('Handler started'); // Add logging to trace execution
+  const startTime = Date.now();
+
   // Run the middleware
   await runMiddleware(req, res, cors);
 
@@ -52,7 +54,7 @@ export default async function handler(req, res) {
 
     if (!chatInstance) {
       // Start a new chat if there is no existing instance
-      chatInstance = model.startChat({
+      chatInstance = await model.startChat({
         history: [],
         generationConfig: {
           maxOutputTokens: 1000,
@@ -61,13 +63,18 @@ export default async function handler(req, res) {
     }
 
     // Send the new message
+    console.log('Sending request to Gemini API'); // Add logging to trace execution
     const result = await chatInstance.sendMessage(`${basePrompt}${userMessage}`);
     const response = await result.response;
     const text = await response.text();
 
+    console.log('Received response from Gemini API'); // Add logging to trace execution
     res.status(200).json({ response: text });
   } catch (error) {
     console.error('Error communicating with Gemini API:', error);
     res.status(500).json({ error: 'Failed to communicate with Gemini API' });
+  } finally {
+    const endTime = Date.now();
+    console.log(`Handler finished in ${endTime - startTime}ms`); // Add logging to trace execution time
   }
 }
