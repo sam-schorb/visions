@@ -1,20 +1,18 @@
 'use client';
 import Head from 'next/head';
 import { useRef, useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import p5 from 'p5';
 import { extractParameters, generateSliderLinkageCode, generateCanvasSize } from '../utils/extractParameters';
 import { INITIAL_SLIDER_VALUE, extractSketchCode } from '../utils/sketchUtils';
 import { submitToAPI } from '../utils/submitToAPI';
 
-// Dynamically import client-side components
-const CodeModal = dynamic(() => import('../components/CodeModal'), { ssr: false });
-const HelpModal = dynamic(() => import('../components/HelpModal'), { ssr: false });
-const APIModal = dynamic(() => import('../components/APIModal'), { ssr: false });
-const SketchControls = dynamic(() => import('../components/SketchControls'), { ssr: false });
-const SketchDisplay = dynamic(() => import('../components/SketchDisplay'), { ssr: false });
-const Canvas = dynamic(() => import('../components/Canvas'), { ssr: false });
-const Notification = dynamic(() => import('../components/Notification'), { ssr: false });
+import Canvas from '../components/Canvas';
+import SketchControls from '../components/SketchControls';
+import SketchDisplay from '../components/SketchDisplay';
+import CodeModal from '../components/CodeModal';
+import HelpModal from '../components/HelpModal';
+import APIModal from '../components/APIModal';
+import Notification from '../components/Notification';
 
 export default function Home() {
   const sketchRef = useRef();
@@ -75,7 +73,6 @@ export default function Home() {
   };
 
   useEffect(() => {
-  
     if (p5Ref.current) {
       p5Ref.current.resizeCanvas(frameWidth, frameHeight);
     }
@@ -178,10 +175,17 @@ export default function Home() {
     }
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event, inputValue) => {
     event.preventDefault();
     setIsLoading(true);
     setModalSketchCode(''); // Clear the edited code
+  
+    if (!selectedAPIKey || !selectedAPIKey.apiKey) {
+      showNotification('Please enter an API key first');
+      setIsAPIModalOpen(true);
+      setIsLoading(false);
+      return;
+    }
   
     const message = inputValue.trim() === '' ? 'improve the sketch in some way, if no sketch is present then make a simple sketch' : inputValue;
   
@@ -191,7 +195,11 @@ export default function Home() {
     try {
       const response = await submitToAPI(apiEndpoint, message, apiKey);
       if (response.error) {
-        showNotification(`API Error: ${response.error}`);
+        if (response.error.includes('invalid_api_key')) {
+          showNotification('Incorrect API key');
+        } else {
+          showNotification(`API Error: ${response.error}`);
+        }
         return;
       }
       let sketchCode = extractSketchCode(response);
@@ -199,7 +207,7 @@ export default function Home() {
       loadSketch(sketchCode);
     } catch (error) {
       console.error('Error during submission:', error);
-      showNotification('Error during submission to the API.');
+      showNotification('Error in submission to API');
     } finally {
       setIsLoading(false);
     }
@@ -340,7 +348,6 @@ export default function Home() {
     return paramNames.filter(name => !selectedParams.includes(name) || sliders[index].param === name);
   };
 
-  // main file
   return (
     <div>
       <Head>

@@ -1,77 +1,36 @@
 // sketches/sketch3.js
 
 window.sketch3 = (p) => {
-
-  let prismSize = 80;
-  let flowSpeed = 0.01;
-  let waveAmplitude = 50;
-  let waveFrequency = 0.1;
-
-  p.setup = () => {
-
-    p.createCanvas(800, 800, p.WEBGL);
-    p.frameRate(60);
-  };
-
-  let angleX = 0;
-  let angleY = 0;
-
-  p.draw = () => {
-    p.background(0);
-    p.lights();
-    p.rotateX(angleX);
-    p.rotateY(angleY);
-    drawPrism(0, 0, 0, prismSize, 4);
-    angleX += 0.01;
-    angleY += 0.01;
-  };
-
-  function drawPrism(x, y, z, size, depth) {
-    if (depth === 0) return;
-    p.push();
-    p.translate(x, y, z);
-    drawWaterSurface(size);
-    p.box(size);
-    p.pop();
-
-    let newSize = size / 2;
-    let positions = [
-      [newSize, newSize, newSize],
-      [-newSize, newSize, newSize],
-      [newSize, -newSize, newSize],
-      [-newSize, -newSize, newSize],
-      [newSize, newSize, -newSize],
-      [-newSize, newSize, -newSize],
-      [newSize, -newSize, -newSize],
-      [-newSize, -newSize, -newSize]
-    ];
-    
-    for (let pos of positions) {
-      drawPrism(x + pos[0], y + pos[1], z + pos[2], newSize, depth - 1);
+    let initialSize = 300;
+    let numTriangles = 50;
+    let angleOffset = p.PI / 20;
+    let sizeDecrement = 6;
+    let rotationSpeed = 0.01;
+  
+    p.setup = () => {
+      p.createCanvas(800, 800);
     };
-  };
-
-  function drawWaterSurface(size) {
-    p.push();
-    p.translate(0, 0, size / 2);
-    p.rotateX(p.PI / 2);
-    for (let i = 0; i < size; i += 10) {
-      for (let j = 0; j < size; j += 10) {
-        let dx = i - size / 2;
-        let dy = j - size / 2;
-        let distance = p.sqrt(dx * dx + dy * dy);
-        let offset = p.floor(distance / 10) * 0.3;
-        let z = p.sin(p.frameCount * flowSpeed + offset) * waveAmplitude;
-        
+  
+    function drawSpirograph(x, y, size, numTriangles, angleOffset, sizeDecrement) {
+      let angle = p.frameCount * rotationSpeed;
+      for (let i = 0; i < numTriangles; i++) {
         p.push();
-        p.translate(i - size / 2, j - size / 2, z);
-        p.noStroke();
-        p.fill(0, 0, 255, 127);
-        p.box(10, 10, 1);
+        p.translate(x, y);
+        p.rotate(angle + i * angleOffset);
+        p.fill(p.map(i, 0, numTriangles, 0, 255), 255, 255);
+        p.triangle(
+          -size / 2, size / (2 * Math.sqrt(3)),
+          size / 2, size / (2 * Math.sqrt(3)),
+          0, -size / Math.sqrt(3)
+        );
         p.pop();
-      };
+        size -= sizeDecrement;
+      }
+    }
+  
+    p.draw = () => {
+      p.colorMode(p.HSB, 255);
+      p.background(0);
+      drawSpirograph(p.width / 2, p.height / 2, initialSize, numTriangles, angleOffset, sizeDecrement);
     };
-    p.pop();
   };
-
-};
