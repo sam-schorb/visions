@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useEffect, useState } from 'react';
 import Button from './ui/button';
 import Input from "./ui/input";
@@ -20,6 +18,23 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
   const [availableProviders, setAvailableProviders] = useState(['OpenAI', 'Gemini']);
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/storeApiKey')
+      .then(response => response.json())
+      .then(data => {
+        if (data.OpenAI || data.Gemini) {
+          const loadedRows = Object.entries(data).map(([provider, apiKey]) => ({
+            apiKey,
+            provider,
+            selected: false
+          }));
+          loadedRows[0].selected = true;
+          setRows(loadedRows);
+        }
+      })
+      .catch(error => console.error('Error loading API keys:', error));
+  }, []);
 
   useEffect(() => {
     if (rows.length === 1) {
@@ -50,6 +65,18 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
     };
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    const currentRow = rows[selectedRowIndex];
+    if (currentRow && currentRow.apiKey && currentRow.provider) {
+      // Store the API key and provider on the server when both are set
+      fetch('/api/storeApiKey', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: currentRow.apiKey, provider: currentRow.provider })
+      }).catch(error => console.error('Error storing API key and provider:', error));
+    }
+  }, [rows, selectedRowIndex]);
+
   const closeModalWithTransition = () => {
     setIsClosing(true);
     setTimeout(() => {
@@ -66,12 +93,27 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
   };
 
   const handleRemoveRow = (index) => {
+    const rowToDelete = rows[index];
+
+    // Delete the API key and provider from the server
+    if (rowToDelete.apiKey && rowToDelete.provider) {
+      fetch('/api/storeApiKey', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: rowToDelete.provider })
+      }).catch(error => console.error('Error deleting API key and provider:', error));
+    }
+
     const updatedRows = rows.filter((_, i) => i !== index);
-    setRows(updatedRows);
-    if (selectedRowIndex === index) {
+
+    if (updatedRows.length === 0) {
+      // No rows left, set the state to an empty API key and provider
+      setRows([{ apiKey: '', provider: '', selected: true }]);
       setSelectedRowIndex(0);
-    } else if (selectedRowIndex > index) {
-      setSelectedRowIndex(selectedRowIndex - 1);
+      onSelectAPIKey({ apiKey: '', provider: '' });
+    } else {
+      setRows(updatedRows);
+      setSelectedRowIndex(updatedRows.length - 1); // Select the last available row
     }
   };
 
@@ -85,10 +127,6 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
     const updatedRows = [...rows];
     updatedRows[index].provider = value;
     setRows(updatedRows);
-
-    const updatedProviders = availableProviders.filter((provider) => provider !== value);
-    setAvailableProviders(updatedProviders);
-
     onAPIChange(value);
   };
 
@@ -192,7 +230,6 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
           .provider-select {
             width: 100%;
           }
-        }
       `}</style>
 
       <div id="api-modal-overlay" className={isClosing ? 'hidden' : ''}>
@@ -226,15 +263,15 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
                     />
                     <Select
                       onValueChange={(value) => handleProviderChange(index, value)}
-                      value={row.provider} // Set the selected value here
-                      className="provider-select"
+                      value={row.provider}
                     >
                       <SelectTrigger className="px-2 py-1 text-black bg-white border border-gray-300 rounded text-left">
-                        <SelectValue>{row.provider || "Select Provider"}</SelectValue>
+                        <SelectValue placeholder="Providers" />
                       </SelectTrigger>
                       <SelectContent className="bg-white text-black">
                         <SelectGroup>
                           <SelectLabel>Providers</SelectLabel>
+                          <div className="provider-divider" />
                           {availableProviders.map((provider) => (
                             <SelectItem key={provider} value={provider} className="hover:bg-gray-200">
                               {provider}
@@ -255,7 +292,7 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
             </RadioGroup>
             <Button variant="default" size="default" onClick={handleAddRow} disabled={rows.length >= 5}>
               <FaPlus className="mr-2" /> Add
-              </Button>
+            </Button>
           </div>
         </div>
       </div>

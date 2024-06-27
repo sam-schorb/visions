@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { FaTimes } from 'react-icons/fa';
+import { FaKey, FaMagic } from 'react-icons/fa';
+
 
 const HelpModal = ({ isOpen, onClose }) => {
   const [isClosing, setIsClosing] = useState(false);
@@ -127,7 +129,7 @@ const HelpModal = ({ isOpen, onClose }) => {
             <h3 className="text-xl">AI-ASSISTED VISUAL SYNTHESIS</h3>
             <br />
             <p>
-              Visions allows users to create generative art sketches using P5JS and artificial intelligence. It is designed to be accessible for people with no coding experience. Visions was created by Sam @ IImaginary. More information can be found here: <a href="https://github.com/sam-schorb/visions" className="text-blue-500">https://github.com/sam-schorb/visions</a>
+              Visions allows users to create generative art sketches using artificial intelligence. It is designed to be accessible for people with no coding experience. Visions was created by Sam @ IImaginary. More information can be found here: <a href="https://github.com/sam-schorb/visions" className="text-blue-500">https://github.com/sam-schorb/visions</a>
             </p>
             <br />
             <div>
@@ -135,9 +137,9 @@ const HelpModal = ({ isOpen, onClose }) => {
               <br />
               <ol className="pl-5 list-decimal">
                 <li>Close this window</li>
-                <li>Open the API window and input an API key</li>
+                <li>Open the API window (<FaKey className="inline-block mx-1" />) and input an API key</li>
                 <li>Type whatever you&apos;d like to see into the input box, e.g. &quot;raining blue triangles&quot;</li>
-                <li>Click generate</li>
+                <li>Click generate (<FaMagic className="inline-block mx-1" />)</li>
                 <li>Play with some sliders</li>
               </ol>
             </div>

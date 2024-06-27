@@ -40,7 +40,7 @@ const SketchControls = ({
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    onSubmit(e, inputValue);
+    onSubmit(e, inputValue); // Pass the inputValue to onSubmit
     setInputValue(''); // Clear the input after submission
     // Change placeholder after submission
     setPlaceholder(placeholders[Math.floor(Math.random() * placeholders.length)]);
