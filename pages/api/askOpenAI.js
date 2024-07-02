@@ -1,6 +1,11 @@
 import cors, { runMiddleware } from '../../middlewares/cors';
 import OpenAI from 'openai';
 
+export const config = {
+  runtime: "edge",
+  maxDuration: 30,
+};
+
 const basePrompt = `
 You are a code generator specialized in producing p5.js sketches. 
 Every input you receive is a request for p5.js code.

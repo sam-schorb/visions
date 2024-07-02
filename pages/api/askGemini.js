@@ -1,6 +1,11 @@
 import cors, { runMiddleware } from '../../middlewares/cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+export const config = {
+  runtime: "edge",
+  maxDuration: 30,
+};
+
 let chatInstance = null; // In-memory store for the chat instance
 
 const basePrompt = `

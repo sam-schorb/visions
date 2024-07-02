@@ -1,10 +1,12 @@
 {
     "functions": {
-      "pages/api/askOpenAI": {
-        "maxDuration": 60
+      "pages/api/askOpenAI.js": {
+        "maxDuration": 30,
+        "runtime": "edge"
       },
-      "pages/api/askGemini": {
-        "maxDuration": 60
+      "pages/api/askGemini.js": {
+        "maxDuration": 30,
+        "runtime": "edge"
       }
     }
   }
