@@ -36,20 +36,19 @@ Example:
 </code>
 `;
 
-export default async function handler(req, res) {
+export default async function handler(req) {
   console.log('Handler started'); // Add logging to trace execution
   const startTime = Date.now();
 
-  // Run the middleware
   await runMiddleware(req, res, cors);
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
   }
 
-  const { message: userMessage, apiKey } = req.body;
+  const { message: userMessage, apiKey } = await req.json();
   if (!apiKey) {
-    return res.status(401).json({ error: 'API key not provided' });
+    return new Response(JSON.stringify({ error: 'API key not provided' }), { status: 401 });
   }
 
   try {
@@ -73,10 +72,10 @@ export default async function handler(req, res) {
     const text = await response.text();
 
     console.log('Received response from Gemini API'); // Add logging to trace execution
-    res.status(200).json({ response: text });
+    return new Response(JSON.stringify({ response: text }), { status: 200 });
   } catch (error) {
     console.error('Error communicating with Gemini API:', error);
-    res.status(500).json({ error: 'Failed to communicate with Gemini API' });
+    return new Response(JSON.stringify({ error: 'Failed to communicate with Gemini API' }), { status: 500 });
   } finally {
     const endTime = Date.now();
     console.log(`Handler finished in ${endTime - startTime}ms`); // Add logging to trace execution time
