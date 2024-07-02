@@ -2,8 +2,7 @@ import cors, { runMiddleware } from '../../middlewares/cors';
 import OpenAI from 'openai';
 
 export const config = {
-  runtime: "edge",
-  maxDuration: 30,
+  runtime: 'edge',
 };
 
 const basePrompt = `
