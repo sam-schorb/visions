@@ -1,7 +1,6 @@
-export const maxDuration = 60; // This function can run for a maximum of 300 seconds (5 minutes)
+export const maxDuration = 60; // This function can run for a maximum of 60 seconds
 export const dynamic = 'force-dynamic';
 
-import cors, { runMiddleware } from '../../middlewares/cors';
 import OpenAI from 'openai';
 
 const basePrompt = `
@@ -35,17 +34,11 @@ Example:
 
 let chatHistory = []; // In-memory store for the chat history
 
-export default async function handler(req) {
-  console.log('Handler started'); // Add logging to trace execution
+export async function POST(request) {
+  console.log('Handler started');
   const startTime = Date.now();
 
-  await runMiddleware(req, res, cors);
-
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
-  }
-
-  const { message: userMessage, apiKey } = await req.json();
+  const { message: userMessage, apiKey } = await request.json();
   if (!apiKey) {
     return new Response(JSON.stringify({ error: 'API key not provided' }), { status: 401 });
   }
@@ -58,9 +51,9 @@ export default async function handler(req) {
   chatHistory.push(newMessage);
 
   try {
-    console.log('Sending request to OpenAI'); // Add logging to trace execution
+    console.log('Sending request to OpenAI');
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4",
       messages: chatHistory,
       max_tokens: 1000,
     });
@@ -68,13 +61,13 @@ export default async function handler(req) {
     const assistantMessage = response.choices[0].message;
     chatHistory.push(assistantMessage);
 
-    console.log('Received response from OpenAI'); // Add logging to trace execution
+    console.log('Received response from OpenAI');
     return new Response(JSON.stringify({ response: assistantMessage.content }), { status: 200 });
   } catch (error) {
     console.error('Error communicating with OpenAI API:', error);
     return new Response(JSON.stringify({ error: 'Failed to communicate with OpenAI API' }), { status: 500 });
   } finally {
     const endTime = Date.now();
-    console.log(`Handler finished in ${endTime - startTime}ms`); // Add logging to trace execution time
+    console.log(`Handler finished in ${endTime - startTime}ms`);
   }
 }
