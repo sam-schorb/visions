@@ -4,10 +4,6 @@ export const dynamic = 'force-dynamic';
 import cors, { runMiddleware } from '../../middlewares/cors';
 import OpenAI from 'openai';
 
-export const config = {
-  runtime: 'edge',
-};
-
 const basePrompt = `
 You are a code generator specialized in producing p5.js sketches. 
 Every input you receive is a request for p5.js code.
@@ -39,19 +35,20 @@ Example:
 
 let chatHistory = []; // In-memory store for the chat history
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   console.log('Handler started'); // Add logging to trace execution
   const startTime = Date.now();
 
+  // Run the middleware
   await runMiddleware(req, res, cors);
 
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { message: userMessage, apiKey } = await req.json();
+  const { message: userMessage, apiKey } = req.body;
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'API key not provided' }), { status: 401 });
+    return res.status(401).json({ error: 'API key not provided' });
   }
 
   const openai = new OpenAI({
@@ -73,10 +70,10 @@ export default async function handler(req) {
     chatHistory.push(assistantMessage);
 
     console.log('Received response from OpenAI'); // Add logging to trace execution
-    return new Response(JSON.stringify({ response: assistantMessage.content }), { status: 200 });
+    res.status(200).json({ response: assistantMessage.content });
   } catch (error) {
     console.error('Error communicating with OpenAI API:', error);
-    return new Response(JSON.stringify({ error: 'Failed to communicate with OpenAI API' }), { status: 500 });
+    res.status(500).json({ error: 'Failed to communicate with OpenAI API' });
   } finally {
     const endTime = Date.now();
     console.log(`Handler finished in ${endTime - startTime}ms`); // Add logging to trace execution time
