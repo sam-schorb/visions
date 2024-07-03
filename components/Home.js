@@ -124,17 +124,22 @@ export default function Home() {
 
   useEffect(() => {
     let p5Instance;
-
+  
     if (sketch) {
       if (p5Ref.current) {
         p5Ref.current.remove();
       }
-
-      const generatedSketch = new Function('p', `return ${sketch}`);
-      p5Instance = new p5(generatedSketch(), sketchRef.current);
-      p5Ref.current = p5Instance;
+  
+      try {
+        const generatedSketch = new Function('p', `return ${sketch}`);
+        p5Instance = new p5(generatedSketch(), sketchRef.current);
+        p5Ref.current = p5Instance;
+      } catch (error) {
+        console.error('Error creating p5 instance:', error);
+        showNotification('Failed to load sketch. Please try again or edit the code.');
+      }
     }
-
+  
     return () => {
       if (p5Instance) {
         p5Instance.remove();
