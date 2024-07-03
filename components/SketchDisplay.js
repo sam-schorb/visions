@@ -32,7 +32,7 @@ const SketchDisplay = ({
           ></div>
           
           {/* Content */}
-          <div id="slider-container" className="relative p-4">
+          <div id="slider-container" className="relative p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
             {sliders.length > 0 && (
               <h2 className="text-xl font-bold mb-4">Parameters</h2>
             )}
