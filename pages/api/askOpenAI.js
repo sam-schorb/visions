@@ -1,3 +1,6 @@
+export const maxDuration = 60; // This function can run for a maximum of 300 seconds (5 minutes)
+export const dynamic = 'force-dynamic';
+
 import cors, { runMiddleware } from '../../middlewares/cors';
 import OpenAI from 'openai';
 

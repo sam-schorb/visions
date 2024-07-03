@@ -178,36 +178,35 @@ export default function Home() {
   const handleSubmit = async (event, inputValue) => {
     event.preventDefault();
     setIsLoading(true);
-    setModalSketchCode(''); // Clear the edited code
+    setModalSketchCode('');
+  
+    let apiEndpoint, apiKey;
   
     if (!selectedAPIKey || !selectedAPIKey.apiKey) {
-      showNotification('Please enter an API key first');
-      setIsAPIModalOpen(true);
-      setIsLoading(false);
-      return;
+      // If no API key is selected, use the Gemini API
+      apiEndpoint = '/api/askGemini';
+      apiKey = null; // We'll use the environment variable in the API route
+    } else {
+      apiEndpoint = selectedAPIKey.provider === 'OpenAI' ? '/api/askOpenAI' : '/api/askGemini';
+      apiKey = selectedAPIKey.apiKey;
     }
   
     const message = inputValue.trim() === '' ? 'improve the sketch in some way, if no sketch is present then make a simple sketch' : inputValue;
   
-    const apiEndpoint = selectedAPIKey.provider === 'OpenAI' ? '/api/askOpenAI' : '/api/askGemini';
-    const apiKey = selectedAPIKey.apiKey; // Use the selected API key from the API Modal
-  
     try {
       const response = await submitToAPI(apiEndpoint, message, apiKey);
-      if (response.error) {
-        if (response.error.includes('invalid_api_key')) {
-          showNotification('Incorrect API key');
-        } else {
-          showNotification(`API Error: ${response.error}`);
-        }
-        return;
-      }
       let sketchCode = extractSketchCode(response);
       setModalSketchCode(sketchCode);
       loadSketch(sketchCode);
     } catch (error) {
       console.error('Error during submission:', error);
-      showNotification('Error in submission to API');
+      if (error.message.includes('Too many requests')) {
+        showNotification('Too many requests, Try again later.');
+      } else if (error.message.includes('invalid_api_key')) {
+        showNotification('Incorrect API key');
+      } else {
+        showNotification(`API Error: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
