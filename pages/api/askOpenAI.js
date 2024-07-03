@@ -1,6 +1,5 @@
 export const maxDuration = 60; // This function can run for a maximum of 60 seconds
 export const dynamic = 'force-dynamic';
-
 import OpenAI from 'openai';
 
 const basePrompt = `
@@ -34,13 +33,17 @@ Example:
 
 let chatHistory = []; // In-memory store for the chat history
 
-export async function POST(request) {
+export default async function handler(req, res) {
   console.log('Handler started');
   const startTime = Date.now();
 
-  const { message: userMessage, apiKey } = await request.json();
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { message: userMessage, apiKey } = req.body;
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'API key not provided' }), { status: 401 });
+    return res.status(401).json({ error: 'API key not provided' });
   }
 
   const openai = new OpenAI({
@@ -62,10 +65,10 @@ export async function POST(request) {
     chatHistory.push(assistantMessage);
 
     console.log('Received response from OpenAI');
-    return new Response(JSON.stringify({ response: assistantMessage.content }), { status: 200 });
+    res.status(200).json({ response: assistantMessage.content });
   } catch (error) {
     console.error('Error communicating with OpenAI API:', error);
-    return new Response(JSON.stringify({ error: 'Failed to communicate with OpenAI API' }), { status: 500 });
+    res.status(500).json({ error: 'Failed to communicate with OpenAI API' });
   } finally {
     const endTime = Date.now();
     console.log(`Handler finished in ${endTime - startTime}ms`);
