@@ -40,28 +40,32 @@ const limiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour window
   max: 30, // Limit each IP to 30 requests per window
   message: { error: 'Too many requests, please try again later.' },
-  keyGenerator: (req) => req.headers['x-forwarded-for'] || req.ip,
+  keyGenerator: (req) => req.headers['x-forwarded-for'] || req.socket.remoteAddress,
 });
 
-export async function POST(request) {
+export default async function handler(req, res) {
   console.log('Handler started');
   const startTime = Date.now();
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   try {
     // Run the rate limiter
     await new Promise((resolve, reject) => {
-      limiter(request, { json: () => {} }, (result) => {
+      limiter(req, res, (result) => {
         if (result instanceof Error) return reject(result);
         resolve(result);
       });
     });
 
-    const { message: userMessage, apiKey } = await request.json();
+    const { message: userMessage, apiKey } = req.body;
   
     const actualApiKey = apiKey || process.env.GEMINI_API_KEY;
   
     if (!actualApiKey) {
-      return new Response(JSON.stringify({ error: 'No API key available' }), { status: 500 });
+      return res.status(500).json({ error: 'No API key available' });
     }
   
     const genAI = new GoogleGenerativeAI(actualApiKey);
@@ -82,13 +86,13 @@ export async function POST(request) {
     const text = await response.text();
 
     console.log('Received response from Gemini API');
-    return new Response(JSON.stringify({ response: text }), { status: 200 });
+    return res.status(200).json({ response: text });
   } catch (error) {
     console.error('Error:', error);
     if (error.statusCode === 429) {
-      return new Response(JSON.stringify({ error: 'Too many requests, please try again later.' }), { status: 429 });
+      return res.status(429).json({ error: 'Too many requests, please try again later.' });
     } else {
-      return new Response(JSON.stringify({ error: 'Failed to communicate with Gemini API' }), { status: 500 });
+      return res.status(500).json({ error: 'Failed to communicate with Gemini API' });
     }
   } finally {
     const endTime = Date.now();
