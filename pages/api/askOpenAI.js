@@ -64,7 +64,7 @@ export default async function handler(req, res) {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: chatHistory,
-      max_tokens: 1000,
+      max_tokens: 3000,
     });
 
     const assistantMessage = response.choices[0].message;
