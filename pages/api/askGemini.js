@@ -1,12 +1,10 @@
 export const maxDuration = 60; // This function can run for a maximum of 60 seconds
 export const dynamic = 'force-dynamic';
 
-import cors, { runMiddleware } from '../../middlewares/cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import rateLimit from 'express-rate-limit';
 
 let chatInstance = null; // In-memory store for the chat instance
-
 
 const basePrompt = `
 You are a code generator specialized in producing p5.js sketches. 
@@ -37,55 +35,39 @@ Example:
 </code>
 `;
 
-
 // Create a rate limiter
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour window
   max: 30, // Limit each IP to 30 requests per window
   message: { error: 'Too many requests, please try again later.' },
-  keyGenerator: (req) => req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+  keyGenerator: (req) => req.headers['x-forwarded-for'] || req.ip,
 });
 
-// Wrap the limiter in a promise to work with async/await
-const runRateLimiter = (req, res) => 
-  new Promise((resolve, reject) => {
-    limiter(req, res, (result) => {
-      if (result instanceof Error) {
-        return reject(result);
-      }
-      return resolve(result);
-    });
-  });
-
-export default async function handler(req, res) {
+export async function POST(request) {
   console.log('Handler started');
   const startTime = Date.now();
 
   try {
-    // Run the CORS middleware
-    await runMiddleware(req, res, cors);
-
     // Run the rate limiter
-    await runRateLimiter(req, res);
+    await new Promise((resolve, reject) => {
+      limiter(request, { json: () => {} }, (result) => {
+        if (result instanceof Error) return reject(result);
+        resolve(result);
+      });
+    });
 
-    if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed' });
-    }
-
-    const { message: userMessage, apiKey } = req.body;
+    const { message: userMessage, apiKey } = await request.json();
   
     const actualApiKey = apiKey || process.env.GEMINI_API_KEY;
   
     if (!actualApiKey) {
-      return res.status(500).json({ error: 'No API key available' });
+      return new Response(JSON.stringify({ error: 'No API key available' }), { status: 500 });
     }
   
     const genAI = new GoogleGenerativeAI(actualApiKey);
-
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     if (!chatInstance) {
-      // Start a new chat if there is no existing instance
       chatInstance = await model.startChat({
         history: [],
         generationConfig: {
@@ -94,20 +76,19 @@ export default async function handler(req, res) {
       });
     }
 
-    // Send the new message
     console.log('Sending request to Gemini API');
     const result = await chatInstance.sendMessage(`${basePrompt}${userMessage}`);
     const response = await result.response;
     const text = await response.text();
 
     console.log('Received response from Gemini API');
-    res.status(200).json({ response: text });
+    return new Response(JSON.stringify({ response: text }), { status: 200 });
   } catch (error) {
     console.error('Error:', error);
     if (error.statusCode === 429) {
-      res.status(429).json({ error: 'Too many requests, please try again later.' });
+      return new Response(JSON.stringify({ error: 'Too many requests, please try again later.' }), { status: 429 });
     } else {
-      res.status(500).json({ error: 'Failed to communicate with Gemini API' });
+      return new Response(JSON.stringify({ error: 'Failed to communicate with Gemini API' }), { status: 500 });
     }
   } finally {
     const endTime = Date.now();
