@@ -1,5 +1,6 @@
-export const maxDuration = 60; // This function can run for a maximum of 60 seconds
-export const dynamic = 'force-dynamic';
+export const config = {
+  maxDuration: 60,  // This function can run for a maximum of 60 seconds
+};
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import rateLimit from 'express-rate-limit';
