@@ -1,5 +1,12 @@
+export const maxDuration = 60; // This function can run for a maximum of 300 seconds (5 minutes)
+export const dynamic = 'force-dynamic';
+
 import cors, { runMiddleware } from '../../middlewares/cors';
 import OpenAI from 'openai';
+
+export const config = {
+  runtime: 'edge',
+};
 
 const basePrompt = `
 You are a code generator specialized in producing p5.js sketches. 
@@ -32,20 +39,19 @@ Example:
 
 let chatHistory = []; // In-memory store for the chat history
 
-export default async function handler(req, res) {
+export default async function handler(req) {
   console.log('Handler started'); // Add logging to trace execution
   const startTime = Date.now();
 
-  // Run the middleware
   await runMiddleware(req, res, cors);
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
   }
 
-  const { message: userMessage, apiKey } = req.body;
+  const { message: userMessage, apiKey } = await req.json();
   if (!apiKey) {
-    return res.status(401).json({ error: 'API key not provided' });
+    return new Response(JSON.stringify({ error: 'API key not provided' }), { status: 401 });
   }
 
   const openai = new OpenAI({
@@ -67,10 +73,10 @@ export default async function handler(req, res) {
     chatHistory.push(assistantMessage);
 
     console.log('Received response from OpenAI'); // Add logging to trace execution
-    res.status(200).json({ response: assistantMessage.content });
+    return new Response(JSON.stringify({ response: assistantMessage.content }), { status: 200 });
   } catch (error) {
     console.error('Error communicating with OpenAI API:', error);
-    res.status(500).json({ error: 'Failed to communicate with OpenAI API' });
+    return new Response(JSON.stringify({ error: 'Failed to communicate with OpenAI API' }), { status: 500 });
   } finally {
     const endTime = Date.now();
     console.log(`Handler finished in ${endTime - startTime}ms`); // Add logging to trace execution time

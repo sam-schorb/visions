@@ -8,6 +8,9 @@ export const submitToAPI = async (apiEndpoint, inputValue, apiKey) => {
       body: JSON.stringify({ message: inputValue, apiKey: apiKey }),
     });
     const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'An error occurred');
+    }
     return data.response;
   } catch (error) {
     console.error('Error during submission:', error);
