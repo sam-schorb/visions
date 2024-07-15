@@ -137,7 +137,6 @@ const HelpModal = ({ isOpen, onClose }) => {
               <br />
               <ol className="pl-5 list-decimal">
                 <li>Close this window</li>
-                <li>Open the API window (<FaKey className="inline-block mx-1" />) and input an API key</li>
                 <li>Type whatever you&apos;d like to see into the input box, e.g. &quot;raining blue triangles&quot;</li>
                 <li>Click generate (<FaMagic className="inline-block mx-1" />)</li>
                 <li>Play with some sliders</li>
@@ -176,9 +175,9 @@ const HelpModal = ({ isOpen, onClose }) => {
               <div className="text-xl">API Management:</div>
               <br />
               <ol className="pl-5 list-decimal">
-                <li><strong>Configure</strong>: Launch the API modal using the &quot;API&quot; button</li>
-                <li><strong>Integrate</strong>: Input your API credentials</li>
+                <li>Open the API window (<FaKey className="inline-block mx-1" />) and input an API key</li>
                 <li><strong>Select</strong>: Choose your desired AI provider from the dropdown</li>
+                <li><strong>Close</strong>: Close the API window and generate a new sketch using your selected provider</li>
               </ol>
             </div>
           </div>
