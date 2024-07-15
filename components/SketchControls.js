@@ -19,13 +19,14 @@ const placeholders = [
 
 const SketchControls = ({
   onSubmit,
-  onSnapshot,
   onToggleCodeModal,
   onToggleHelpModal,
   onToggleAPIModal,
   onResetSketch,
   onNewSketch,
   isLoading,
+  modalSketchCode,
+  showNotification
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [placeholder, setPlaceholder] = useState('');
@@ -46,8 +47,12 @@ const SketchControls = ({
     setPlaceholder(placeholders[Math.floor(Math.random() * placeholders.length)]);
   };
 
-  const handleSnapshotClick = () => {
-    onSnapshot();
+  const getEncodedSketchUrl = () => {
+    const encodedSketch = btoa(encodeURIComponent(modalSketchCode)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const url = `${window.location.origin}/?code=${encodedSketch}`;
+    navigator.clipboard.writeText(url).then(() => {
+      showNotification('Encoded URL copied to clipboard!');
+    });
   };
 
   return (
@@ -72,11 +77,11 @@ const SketchControls = ({
         <Button
           variant="default"
           size="default"
-          onClick={handleSnapshotClick}
+          onClick={getEncodedSketchUrl}
           className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0"
         >
           <FaCamera />
-          <span className="hidden md:inline">Photo</span>
+          <span className="hidden md:inline">Share</span>
         </Button>
         <Button variant="default" size="default" onClick={onToggleHelpModal} className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0">
           <FaQuestion />

@@ -14,7 +14,7 @@ import HelpModal from '../components/HelpModal';
 import APIModal from '../components/APIModal';
 import Notification from '../components/Notification';
 
-export default function Home() {
+export default function Home({ initialSketch = null }) {
   const sketchRef = useRef();
   const p5Ref = useRef();
   const [inputValue, setInputValue] = useState('');
@@ -35,30 +35,95 @@ export default function Home() {
   const [notification, setNotification] = useState({ isVisible: false, message: '' });
   const [frameWidth, setFrameWidth] = useState(0);
   const [frameHeight, setFrameHeight] = useState(0);
+  const [loadedFromUrl, setLoadedFromUrl] = useState(false);
+  const [lastSketchNumber, setLastSketchNumber] = useState(null);
 
   const componentRef = useRef(null);
   const sizeRef = useRef({ width: 0, height: 0 });
 
+  const loadSketchFromURL = (code) => {
+    try {
+      const paddedCode = code.replace(/-/g, '+').replace(/_/g, '/') + '=='.slice(0, (4 - code.length % 4) % 4);
+      const decodedSketch = decodeURIComponent(atob(paddedCode));
+      loadSketch(decodedSketch);
+      setModalSketchCode(decodedSketch)
+      console.log('loading sketch from URL');
+      setLoadedFromUrl(true);
+    } catch (error) {
+      console.error('Error decoding sketch from URL:', error);
+      showNotification('Error loading sketch from URL.');
+    }
+  };
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+  
+    if (componentRef.current) {
+      const { width, height } = componentRef.current.getBoundingClientRect();
+      const smallerDimension = Math.min(width || 0, height || 0);
+      setFrameWidth(smallerDimension);
+      setFrameHeight(smallerDimension);
+    }
+  
+    if (code) {
+      // Use setTimeout to ensure this runs after the state updates
+      setTimeout(() => loadSketchFromURL(code), 0);
+    }
+  }, []);
+  
+  // Add another useEffect to log the frame dimensions when they change
+  useEffect(() => {
+    console.log('frameWidth, frameHeight', frameWidth, frameHeight);
+    
+    // If there's a code in the URL, load the sketch when dimensions are set
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    if (code && frameWidth > 0 && frameHeight > 0) {
+      loadSketchFromURL(code);
+    }
+  }, [frameWidth, frameHeight]);
+
+  const setAndEncodeModalSketchCode = (code) => {
+    setModalSketchCode(code);
+    if (code.trim() !== '') {
+      const encodedCode = btoa(encodeURIComponent(code));
+      console.log('Encoded sketch code:', encodedCode);
+    }
+  };
+
+  useEffect(() => {
+    if (initialSketch) {
+      loadSketch(initialSketch);
+      console.log('loading initial sketch')
+    }
+  }, [initialSketch]);
+
+  const resizeCanvas = () => {
+    if (componentRef.current) {
+      const { width, height } = componentRef.current.getBoundingClientRect();
+      sizeRef.current = { width, height };
+  
+      if (isFullscreen) {
+        setFrameWidth(width || 0);
+        setFrameHeight(height || 0);
+      } else {
+        const smallerDimension = Math.min(width || 0, height || 0);
+        setFrameWidth(smallerDimension);
+        setFrameHeight(smallerDimension);
+      }
+    }
+  };
+
+
   useEffect(() => {
     const handleResize = () => {
-      if (componentRef.current) {
-        const { width, height } = componentRef.current.getBoundingClientRect();
-        sizeRef.current = { width, height };
-
-        if (isFullscreen) {
-          setFrameWidth(width || 0);
-          setFrameHeight(height || 0);
-        } else {
-          const smallerDimension = Math.min(width || 0, height || 0);
-          setFrameWidth(smallerDimension);
-          setFrameHeight(smallerDimension);
-        }
-      }
+      resizeCanvas();
     };
-
+  
     handleResize();
     window.addEventListener('resize', handleResize);
-
+  
     return () => {
       window.removeEventListener('resize', handleResize);
     };
@@ -83,14 +148,11 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (loadNewSketch) {
-      // Get the current sketch number
-      const currentSketchNumber = sketch.match(/sketch(\d+)/)?.[1];
-      
+    if (loadNewSketch && !loadedFromUrl) {
       let sketchNumber;
       do {
         sketchNumber = Math.floor(Math.random() * 5) + 1;
-      } while (sketchNumber.toString() === currentSketchNumber);
+      } while (sketchNumber === lastSketchNumber);
   
       import(`../sketches/sketch${sketchNumber}.js`)
         .then(module => {
@@ -105,22 +167,28 @@ export default function Home() {
           const sketchFunction = window[`sketch${sketchNumber}`];
           const wrappedSketchCode = `${sketchFunction.toString()}`;
           
-          setModalSketchCode(wrappedSketchCode);
+          setAndEncodeModalSketchCode(wrappedSketchCode);
           loadSketch(wrappedSketchCode);
+          console.log('loading sketch from backend')
           setLoadNewSketch(false);
+          setLastSketchNumber(sketchNumber);  // Update the last sketch number
         })
         .catch(error => {
           console.error('Error loading new sketch:', error);
           showNotification('Error loading new sketch.');
         });
     }
-  }, [loadNewSketch, sketch]);
+  }, [loadNewSketch, loadedFromUrl]);
 
   useEffect(() => {
-    if (!sketch) {
+    if (!sketch && !loadedFromUrl) {
       setLoadNewSketch(true);
     }
-  }, [sketch]);
+  }, [sketch, loadedFromUrl]);
+
+  useEffect(() => {
+    console.log(loadedFromUrl)
+  }, [loadedFromUrl]);
 
   useEffect(() => {
     let p5Instance;
@@ -183,7 +251,7 @@ export default function Home() {
   const handleSubmit = async (event, inputValue) => {
     event.preventDefault();
     setIsLoading(true);
-    setModalSketchCode('');
+    setAndEncodeModalSketchCode('');
   
     let apiEndpoint, apiKey;
   
@@ -201,8 +269,10 @@ export default function Home() {
     try {
       const response = await submitToAPI(apiEndpoint, message, apiKey);
       let sketchCode = extractSketchCode(response);
-      setModalSketchCode(sketchCode);
+      setAndEncodeModalSketchCode(sketchCode);
       loadSketch(sketchCode);
+      console.log('loading sketch from API')
+
     } catch (error) {
       console.error('Error during submission:', error);
       if (error.message.includes('Too many requests')) {
@@ -258,8 +328,17 @@ export default function Home() {
       setParamDefaults(parameterDefaults);
       setParamNames(parameterNames);
 
-      // When setting the sketch, wrap it again
       setSketch(`${modifiedSketchCode}`);
+      setLoadNewSketch(false)
+      setLoadedFromUrl(false);
+  
+      // Force a resize after setting the sketch
+      setTimeout(() => {
+        if (p5Ref.current) {
+          p5Ref.current.resizeCanvas(frameWidth, frameHeight);
+        }
+      }, 0);
+
   
       if (p5Ref.current) {
         const params = {};
@@ -277,8 +356,10 @@ export default function Home() {
   const loadEditedSketch = (editedSketchCode) => {
     try {
       const sketchCode = editedSketchCode;
-      setModalSketchCode(editedSketchCode); // Update the modal sketch code with the edited code
+      setAndEncodeModalSketchCode(editedSketchCode);
       loadSketch(sketchCode);
+      setLoadedFromUrl(false);
+
     } catch (error) {
       console.error('Error loading edited sketch:', error);
       showNotification('Error loading the edited sketch.');
@@ -347,6 +428,17 @@ export default function Home() {
     }
   };
 
+  const handleNewSketch = () => {
+    console.log('handling new sketch')
+    setLoadedFromUrl(false)
+    // Reset the URL to '/'
+    window.history.pushState({}, '', '/');
+
+    
+    // Then proceed with loading a new sketch
+    setLoadNewSketch(true);
+  };
+
   const getAvailableParams = (index) => {
     const selectedParams = sliders.map(item => item.param);
     return paramNames.filter(name => !selectedParams.includes(name) || sliders[index].param === name);
@@ -383,7 +475,9 @@ export default function Home() {
               onToggleAPIModal={handleToggleAPIModal}
               onResetSketch={resetSketch}
               isLoading={isLoading}
-              onNewSketch={() => setLoadNewSketch(true)}
+              onNewSketch={handleNewSketch}  // Updated this line
+              modalSketchCode={modalSketchCode}
+              showNotification={showNotification}
             />
             <div>
               <SketchDisplay
