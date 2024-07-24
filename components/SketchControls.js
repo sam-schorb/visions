@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Button from './ui/button';
-import Input from './ui/input';
-import { FaPlus, FaCode, FaRedo, FaCamera, FaQuestion, FaKey, FaMagic } from 'react-icons/fa';
+import Textarea from './ui/textareagrow';
+import { FaPlus, FaCode, FaRedo, FaUpload, FaQuestion, FaKey, FaMagic } from 'react-icons/fa';
 import HashLoader from 'react-spinners/HashLoader';
 
 const placeholders = [
@@ -41,10 +41,18 @@ const SketchControls = ({
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    onSubmit(e, inputValue); // Pass the inputValue to onSubmit
-    setInputValue(''); // Clear the input after submission
-    // Change placeholder after submission
-    setPlaceholder(placeholders[Math.floor(Math.random() * placeholders.length)]);
+    if (inputValue.trim()) {
+      onSubmit(e, inputValue);
+      setInputValue('');
+      setPlaceholder(placeholders[Math.floor(Math.random() * placeholders.length)]);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleFormSubmit(e);
+    }
   };
 
   const getEncodedSketchUrl = () => {
@@ -62,6 +70,10 @@ const SketchControls = ({
           <FaPlus />
           <span className="hidden md:inline">New</span>
         </Button>
+        <Button variant="default" size="default" onClick={onResetSketch} className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0">
+          <FaRedo />
+          <span className="hidden md:inline">Reset</span>
+        </Button>
         <Button variant="default" size="default" onClick={onToggleCodeModal} className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0">
           <FaCode />
           <span className="hidden md:inline">Code</span>
@@ -70,17 +82,13 @@ const SketchControls = ({
           <FaKey />
           <span className="hidden md:inline">API</span>
         </Button>
-        <Button variant="default" size="default" onClick={onResetSketch} className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0">
-          <FaRedo />
-          <span className="hidden md:inline">Reset</span>
-        </Button>
         <Button
           variant="default"
           size="default"
           onClick={getEncodedSketchUrl}
           className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0"
         >
-          <FaCamera />
+          <FaUpload />
           <span className="hidden md:inline">Share</span>
         </Button>
         <Button variant="default" size="default" onClick={onToggleHelpModal} className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0">
@@ -88,25 +96,24 @@ const SketchControls = ({
           <span className="hidden md:inline">Help</span>
         </Button>
       </div>
-      <form onSubmit={handleFormSubmit} style={{ display: 'flex', alignItems: 'center', paddingBottom: '40px', width: '100%' }}>
-        <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', backgroundColor: 'bg-gray-500' }}>
+      <form onSubmit={handleFormSubmit} className="flex pb-10 w-full">
+        <div className="flex-grow flex items-start">
           {!isLoading ? (
             <>
-              <Input
-                type="text"
+              <Textarea
                 placeholder={placeholder}
                 value={inputValue}
                 onChange={handleInputChange}
-                style={{ width: '100%', backgroundColor: 'bg-black', color: 'bg-gray-500' }}
-                className="bg-black text-gray-300"
+                onKeyDown={handleKeyDown}
+                className="w-full bg-black text-gray-300 rounded-md mr-2"
               />
-              <Button type="submit" className="ml-2 flex items-center space-x-2">
+              <Button type="submit" className="flex-shrink-0 flex items-center mt-0.5 space-x-2">
                 <FaMagic />
                 <span className="hidden md:inline">Generate</span>
               </Button>
             </>
           ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '40px' }}>
+            <div className="flex justify-center items-center h-10 w-full">
               <HashLoader color="#ffffff" loading={isLoading} size={40} />
             </div>
           )}

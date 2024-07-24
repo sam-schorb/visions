@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Textarea from './ui/textarea';
 import Button from './ui/button';
 import { FaCopy, FaEdit, FaSave, FaTimes, FaBan } from 'react-icons/fa';
+import Link from 'next/link';
 
 const CodeModal = ({ isOpen, onClose, displayedCode, onSave }) => {
   const [editMode, setEditMode] = useState(false);
@@ -132,15 +133,31 @@ const CodeModal = ({ isOpen, onClose, displayedCode, onSave }) => {
           padding: 30px;
           max-width: 100%;
         }
+        .logo-svg {
+          filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(106%) contrast(101%);
+          transition: filter 0.3s;
+        }
+        .logo-svg:hover {
+          filter: invert(50%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(83%) contrast(101%);
+        }
       `}</style>
 
       <div id="code-modal-overlay" className={isClosing ? 'hidden' : ''}>
         <div id="code-modal" className={`${isOpen ? 'opening' : ''} ${isClosing ? 'hidden' : ''}`}>
-          <div className="modal-header flex items-center justify-center relative">
-            <h2 className="text-white text-2xl">Code Viewer</h2>
+          <div className="modal-header flex items-center justify-between relative px-5">
+            <Link href="https://www.iimaginary.com/" target="_blank" rel="noopener noreferrer" className="hidden lg:block">
+              <div className="w-10 h-10 relative">
+                <img
+                  src="/cloudLogoSVG.svg"
+                  alt="iImaginary Cloud Logo"
+                  className="logo-svg"
+                />
+              </div>
+            </Link>
+            <h2 className="text-white text-2xl absolute left-1/2 transform -translate-x-1/2">Code Viewer</h2>
             <button
               onClick={closeModalWithTransition}
-              className="absolute top-[17px] right-5 bg-transparent text-black border-none cursor-pointer text-base"
+              className="bg-transparent text-black border-none cursor-pointer text-base"
             >
               <FaTimes />
             </button>

@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import Link from 'next/link';
 
 const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange }) => {
   const [rows, setRows] = useState([{ apiKey: '', provider: '', selected: true }]);
@@ -230,11 +231,28 @@ const APIModal = ({ isOpen, onClose, onSelectAPIKey, selectedAPI, onAPIChange })
           .provider-select {
             width: 100%;
           }
+        }
+        .logo-svg {
+          filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(106%) contrast(101%);
+          transition: filter 0.3s;
+        }
+        .logo-svg:hover {
+          filter: invert(50%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(83%) contrast(101%);
+        }
       `}</style>
 
       <div id="api-modal-overlay" className={isClosing ? 'hidden' : ''}>
         <div id="api-modal" className={`${isOpen ? 'opening' : ''} ${isClosing ? 'hidden' : ''}`}>
           <div className="modal-header">
+            <Link href="https://www.iimaginary.com/" target="_blank" rel="noopener noreferrer" className="absolute left-4">
+              <div className="w-10 h-10 relative">
+                <img
+                  src="/cloudLogoSVG.svg"
+                  alt="iImaginary Cloud Logo"
+                  className="logo-svg"
+                />
+              </div>
+            </Link>
             <h2 className="text-white text-2xl">API</h2>
             <button
               onClick={closeModalWithTransition}

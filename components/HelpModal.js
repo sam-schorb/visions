@@ -1,9 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { FaTimes } from 'react-icons/fa';
-import { FaKey, FaMagic } from 'react-icons/fa';
-
+import { FaTimes, FaKey, FaMagic } from 'react-icons/fa';
+import Link from 'next/link';
 
 const HelpModal = ({ isOpen, onClose }) => {
   const [isClosing, setIsClosing] = useState(false);
@@ -73,7 +72,7 @@ const HelpModal = ({ isOpen, onClose }) => {
           width: min(90%, 800px);
           height: 80%;
           background-color: #D3D3D3;
-          overflow: auto;
+          overflow: hidden;
           color: black;
           border-radius: 10px;
           transition: width 1s, height 1s, background 1s, border 1s;
@@ -99,12 +98,15 @@ const HelpModal = ({ isOpen, onClose }) => {
           justify-content: center;
           border-top-left-radius: 10px;
           border-top-right-radius: 10px;
+          z-index: 10;
         }
         #help-modal-content {
-          margin-top: 80px;
+          margin-top: 60px;
           padding-left: 30px;
           padding-right: 30px;
           padding-bottom: 30px;
+          overflow-y: auto;
+          height: calc(100% - 60px);
         }
         #close-button {
           position: absolute;
@@ -116,16 +118,33 @@ const HelpModal = ({ isOpen, onClose }) => {
           cursor: pointer;
           font-size: 16px;
         }
+        .logo-svg {
+          filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(106%) contrast(101%);
+          transition: filter 0.3s;
+        }
+        .logo-svg:hover {
+          filter: invert(50%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(83%) contrast(101%);
+        }
       `}</style>
       <div id="help-modal-overlay" className={`${isClosing ? 'hidden' : ''} fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center`}>
-        <div id="help-modal" className={`${isOpen ? 'opening' : ''} ${isClosing ? 'hidden' : ''} bg-gray-300 text-black rounded-lg overflow-auto`}>
+        <div id="help-modal" className={`${isOpen ? 'opening' : ''} ${isClosing ? 'hidden' : ''} bg-gray-300 text-black rounded-lg relative`}>
           <div id="help-modal-header" className="absolute top-0 left-0 right-0 h-15 bg-gray-400 flex items-center justify-center rounded-t-lg">
-            <h2 className="text-white text-2xl">VISIONS</h2>
+            <Link href="https://www.iimaginary.com/" target="_blank" rel="noopener noreferrer" className="absolute left-4">
+              <div className="w-10 h-10 relative">
+                <img
+                  src="/cloudLogoSVG.svg"
+                  alt="iImaginary Cloud Logo"
+                  className="logo-svg"
+                />
+              </div>
+            </Link>
+            <h2 className="text-white text-2xl">HELP</h2>
+            <button id="close-button" onClick={closeModalWithTransition} className="absolute top-4 right-5 text-black">
+              <FaTimes />
+            </button>
           </div>
-          <button id="close-button" onClick={closeModalWithTransition} className="absolute top-4 right-5 text-black">
-            <FaTimes />
-          </button>
-          <div id="help-modal-content" className="mt-20 px-8 pb-8">
+          <div id="help-modal-content" className="overflow-y-auto mt-16">
+            <br />
             <h3 className="text-xl">AI-ASSISTED VISUAL SYNTHESIS</h3>
             <br />
             <p>

@@ -1,3 +1,5 @@
+//askGemini.js
+
 export const config = {
   maxDuration: 60,  // This function can run for a maximum of 60 seconds
 };
@@ -10,6 +12,7 @@ let chatInstance = null; // In-memory store for the chat instance
 const basePrompt = `
 You are a code generator specialized in producing p5.js sketches. 
 Every input you receive is a request for p5.js code.
+Never attempt to load external images using p.loadImage() or similar functions.
 Do not include any explanations, comments, or additional text.
 Only output the required p5.js code.
 Always use variable assignments for parameter values using let and use those variables in the drawing code.
@@ -61,7 +64,13 @@ export default async function handler(req, res) {
       });
     });
 
-    const { message: userMessage, apiKey } = req.body;
+    const { message: userMessage, apiKey, resetChat } = req.body;
+
+    // Handle chat reset
+    if (resetChat) {
+      chatInstance = null;
+      return res.status(200).json({ message: 'Chat history reset successfully' });
+    }
   
     const actualApiKey = apiKey || process.env.GEMINI_API_KEY;
   

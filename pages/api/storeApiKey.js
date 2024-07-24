@@ -34,7 +34,8 @@ export default function handler(req, res) {
     res.status(200).json({ success: true });
   } else if (req.method === 'GET') {
     if (!userId || !apiKeys[userId]) {
-      return res.status(404).json({ error: 'No API key found' });
+      // Instead of returning an error, return an empty object
+      return res.status(200).json({});
     }
 
     // Decrypt and return the API keys
