@@ -8,6 +8,7 @@ import OpenAI from 'openai';
 const basePrompt = `
 You are a code generator specialized in producing p5.js sketches. 
 Every input you receive is a request for p5.js code.
+Never attempt to load external images using p.loadImage() or similar functions.
 Do not include any explanations, comments, or additional text.
 Only output the required p5.js code.
 Always use variable assignments for parameter values using let and use those variables in the drawing code.
@@ -47,7 +48,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { message: userMessage, apiKey } = req.body;
+  const { message: userMessage, apiKey, resetChat } = req.body;
+
+  // Handle chat reset
+  if (resetChat) {
+    chatHistory = [];
+    return res.status(200).json({ message: 'Chat history reset successfully' });
+  }
+
   if (!apiKey) {
     return res.status(401).json({ error: 'API key not provided' });
   }

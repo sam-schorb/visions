@@ -47,7 +47,6 @@ export default function Home({ initialSketch = null }) {
       const decodedSketch = decodeURIComponent(atob(paddedCode));
       loadSketch(decodedSketch);
       setModalSketchCode(decodedSketch)
-      console.log('loading sketch from URL');
       setLoadedFromUrl(true);
     } catch (error) {
       console.error('Error decoding sketch from URL:', error);
@@ -74,7 +73,6 @@ export default function Home({ initialSketch = null }) {
   
   // Add another useEffect to log the frame dimensions when they change
   useEffect(() => {
-    console.log('frameWidth, frameHeight', frameWidth, frameHeight);
     
     // If there's a code in the URL, load the sketch when dimensions are set
     const urlParams = new URLSearchParams(window.location.search);
@@ -88,14 +86,12 @@ export default function Home({ initialSketch = null }) {
     setModalSketchCode(code);
     if (code.trim() !== '') {
       const encodedCode = btoa(encodeURIComponent(code));
-      console.log('Encoded sketch code:', encodedCode);
     }
   };
 
   useEffect(() => {
     if (initialSketch) {
       loadSketch(initialSketch);
-      console.log('loading initial sketch')
     }
   }, [initialSketch]);
 
@@ -169,12 +165,10 @@ export default function Home({ initialSketch = null }) {
           
           setAndEncodeModalSketchCode(wrappedSketchCode);
           loadSketch(wrappedSketchCode);
-          console.log('loading sketch from backend')
           setLoadNewSketch(false);
           setLastSketchNumber(sketchNumber);  // Update the last sketch number
         })
         .catch(error => {
-          console.error('Error loading new sketch:', error);
           showNotification('Error loading new sketch.');
         });
     }
@@ -185,10 +179,6 @@ export default function Home({ initialSketch = null }) {
       setLoadNewSketch(true);
     }
   }, [sketch, loadedFromUrl]);
-
-  useEffect(() => {
-    console.log(loadedFromUrl)
-  }, [loadedFromUrl]);
 
   useEffect(() => {
     let p5Instance;
@@ -271,7 +261,6 @@ export default function Home({ initialSketch = null }) {
       let sketchCode = extractSketchCode(response);
       setAndEncodeModalSketchCode(sketchCode);
       loadSketch(sketchCode);
-      console.log('loading sketch from API')
 
     } catch (error) {
       console.error('Error during submission:', error);
@@ -428,15 +417,36 @@ export default function Home({ initialSketch = null }) {
     }
   };
 
-  const handleNewSketch = () => {
-    console.log('handling new sketch')
-    setLoadedFromUrl(false)
+  const handleNewSketch = async () => {
+    setLoadedFromUrl(false);
     // Reset the URL to '/'
     window.history.pushState({}, '', '/');
 
-    
-    // Then proceed with loading a new sketch
-    setLoadNewSketch(true);
+    try {
+      // Reset the Gemini chat history
+      await fetch('/api/askGemini', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resetChat: true }),
+      });
+
+      // Reset the OpenAI chat history
+      await fetch('/api/askOpenAI', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resetChat: true }),
+      });
+
+      // Then proceed with loading a new sketch
+      setLoadNewSketch(true);
+    } catch (error) {
+      console.error('Failed to reset chat history:', error);
+      showNotification('Failed to reset chat history. Please try again.');
+    }
   };
 
   const getAvailableParams = (index) => {
