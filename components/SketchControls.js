@@ -3,8 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import Button from './ui/button';
 import Textarea from './ui/textareagrow';
-import { FaPlus, FaCode, FaRedo, FaUpload, FaQuestion, FaKey, FaMagic } from 'react-icons/fa';
+import { FaPlus, FaCode, FaRedo, FaUpload, FaQuestion, FaKey, FaMagic, FaCopy } from 'react-icons/fa';
 import HashLoader from 'react-spinners/HashLoader';
+import { nanoid } from 'nanoid';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from './ui/dropdown';
 
 const placeholders = [
   "Type an idea, e.g. Raining blue triangles...",
@@ -22,14 +30,19 @@ const SketchControls = ({
   onToggleCodeModal,
   onToggleHelpModal,
   onToggleAPIModal,
+  onToggleShareModal, 
   onResetSketch,
   onNewSketch,
   isLoading,
   modalSketchCode,
-  showNotification
+  showNotification,
+  onNanoIdChange,
+  onTakeSnapshot,
+
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [placeholder, setPlaceholder] = useState('');
+  const [currentNanoId, setCurrentNanoId] = useState(null);
 
   useEffect(() => {
     setPlaceholder(placeholders[Math.floor(Math.random() * placeholders.length)]);
@@ -55,12 +68,42 @@ const SketchControls = ({
     }
   };
 
-  const getEncodedSketchUrl = () => {
-    const encodedSketch = btoa(encodeURIComponent(modalSketchCode)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    const url = `${window.location.origin}/?code=${encodedSketch}`;
-    navigator.clipboard.writeText(url).then(() => {
-      showNotification('Encoded URL copied to clipboard!');
-    });
+  const getEncodedSketchUrl = async () => {
+    try {
+      const encodedSketch = btoa(encodeURIComponent(modalSketchCode));
+  
+      // Save the sketch to MongoDB
+      const response = await fetch('/api/saveSketch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key: currentNanoId, encodedCode: encodedSketch }),
+      });
+  
+      if (response.ok) {
+        const url = `${window.location.origin}/?sketch=${currentNanoId}`;
+        navigator.clipboard.writeText(url).then(() => {
+          showNotification('Sketch URL copied to clipboard!');
+        });
+      } else {
+        showNotification('Failed to save sketch');
+      }
+    } catch (error) {
+      console.error('Error saving sketch:', error);
+      showNotification('Error saving sketch');
+    }
+  };
+
+  const handlePublish = () => {
+    onToggleShareModal(); // Use the prop function to open the ShareModal
+  };
+
+  const handleShareMenuOpen = () => {
+    const newNanoId = nanoid(10);
+    setCurrentNanoId(newNanoId);
+    onNanoIdChange(newNanoId);
+    onTakeSnapshot(); // Call the takeSnapshot function
   };
 
   return (
@@ -82,15 +125,31 @@ const SketchControls = ({
           <FaKey />
           <span className="hidden md:inline">API</span>
         </Button>
-        <Button
-          variant="default"
-          size="default"
-          onClick={getEncodedSketchUrl}
-          className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0"
-        >
-          <FaUpload />
-          <span className="hidden md:inline">Share</span>
-        </Button>
+        <DropdownMenu onOpenChange={(open) => {
+          if (open) handleShareMenuOpen();
+        }}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="default"
+              size="default"
+              className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0"
+            >
+              <FaUpload />
+              <span className="hidden md:inline">Share</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 bg-white text-black border border-gray-300 rounded shadow-md">
+            <DropdownMenuItem onClick={getEncodedSketchUrl} className="flex items-center space-x-2 px-2 py-2 hover:bg-gray-200 cursor-pointer">
+              <FaCopy className="w-4 h-4" />
+              <span>Copy to Clipboard</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-gray-200" />
+            <DropdownMenuItem onClick={handlePublish} className="flex items-center space-x-2 px-2 py-2 hover:bg-gray-200 cursor-pointer">
+              <FaUpload className="w-4 h-4" />
+              <span>Publish to Twitter/X</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button variant="default" size="default" onClick={onToggleHelpModal} className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0">
           <FaQuestion />
           <span className="hidden md:inline">Help</span>
