@@ -36,7 +36,6 @@ const ShareModal = ({ isOpen, onClose, onShare, currentNanoId, modalSketchCode, 
     }, 1000);
   };
 
-
   const handleShare = async () => {
     setIsSharing(true);
     setError('');
@@ -107,7 +106,8 @@ const ShareModal = ({ isOpen, onClose, onShare, currentNanoId, modalSketchCode, 
           }
           to {
             width: min(90%, 800px);
-            height: 80%;
+            height: auto;
+            max-height: 90vh;
             background: rgba(211, 211, 211, 1);
             border: 1px solid white;
           }
@@ -132,7 +132,8 @@ const ShareModal = ({ isOpen, onClose, onShare, currentNanoId, modalSketchCode, 
         #share-modal {
           position: relative;
           width: min(90%, 800px);
-          height: 80%;
+          height: auto;
+          max-height: 90vh;
           background-color: #D3D3D3;
           overflow: hidden;
           color: black;
@@ -166,7 +167,6 @@ const ShareModal = ({ isOpen, onClose, onShare, currentNanoId, modalSketchCode, 
           margin-top: 60px;
           padding: 30px;
           overflow-y: auto;
-          height: calc(100% - 60px);
         }
         #close-button {
           position: absolute;
@@ -179,16 +179,16 @@ const ShareModal = ({ isOpen, onClose, onShare, currentNanoId, modalSketchCode, 
           font-size: 16px;
         }
       `}</style>
-      <div id="share-modal-overlay" className={`${isClosing ? 'hidden' : ''} fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center`}>
-        <div id="share-modal" className={`${isOpen ? 'opening' : ''} ${isClosing ? 'hidden' : ''} bg-gray-300 text-black rounded-lg relative`}>
-          <div id="share-modal-header" className="absolute top-0 left-0 right-0 h-15 bg-gray-400 flex items-center justify-center rounded-t-lg">
+      <div id="share-modal-overlay" className={`${isClosing ? 'hidden' : ''}`}>
+        <div id="share-modal" className={`${isOpen ? 'opening' : ''} ${isClosing ? 'hidden' : ''}`}>
+          <div id="share-modal-header">
             <h2 className="text-white text-2xl">Visions Gallery</h2>
-            <button id="close-button" onClick={closeModalWithTransition} className="absolute top-4 right-5 text-black">
+            <button id="close-button" onClick={closeModalWithTransition}>
               <FaTimes />
             </button>
           </div>
-          <div id="share-modal-content" className="overflow-y-auto mt-16">
-          <p className="mb-4">
+          <div id="share-modal-content">
+            <p className="mb-4">
               🎨 Showcase your creativity by adding your sketch to the Visions Gallery at{' '}
               <a href="https://x.com/VisionsGallery_" target="_blank" rel="noopener noreferrer" className="text-blue-500">
                 x.com/VisionsGallery_

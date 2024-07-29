@@ -2,7 +2,6 @@
 export const INITIAL_SLIDER_VALUE = 50;
 export const RENDER_STILL_DELAY = 2000;
 
-
 export const extractSketchCode = (response) => {
   let sketchCode = response.trim();
 
@@ -13,14 +12,18 @@ export const extractSketchCode = (response) => {
 
     // Unescape the special characters
     sketchCode = sketchCode.replace(/\\n/g, '\n').replace(/\\`/g, '`');
-  }
 
-  // Handle code blocks with backticks
-  const backtickMatch = sketchCode.match(/```(\w+)?\s*([\s\S]*?)```/);
-  if (backtickMatch) {
-    sketchCode = backtickMatch[2].trim();
+    // Extract the code block
+    const codeStartIndex = sketchCode.indexOf('```');
+    if (codeStartIndex !== -1) {
+      sketchCode = sketchCode.slice(codeStartIndex + 3);
+      const codeEndIndex = sketchCode.indexOf('```');
+      if (codeEndIndex !== -1) {
+        sketchCode = sketchCode.slice(0, codeEndIndex);
+      }
+    }
   } else {
-    // Handle the response as plain text with <code> tags
+    // Handle the response as plain text
     const codeStartIndex = sketchCode.indexOf('<code>');
     if (codeStartIndex !== -1) {
       sketchCode = sketchCode.slice(codeStartIndex + 6);
@@ -31,13 +34,15 @@ export const extractSketchCode = (response) => {
     }
   }
 
-  // Remove any remaining <code> tags
-  sketchCode = sketchCode.replace(/<\/?code>/g, '').trim();
-
-  // Ensure the sketch code is wrapped in a function
-  if (!sketchCode.startsWith('(p) =>') && !sketchCode.startsWith('function')) {
-    sketchCode = `(p) => {\n${sketchCode}\n}`;
+  // Remove leading and trailing triple backticks
+  if (sketchCode.startsWith('```')) {
+    sketchCode = sketchCode.slice(3).trim();
+  }
+  if (sketchCode.endsWith('```')) {
+    sketchCode = sketchCode.slice(0, -3).trim();
   }
 
+  sketchCode = sketchCode.replace(/<\/?code>/g, '').trim();
   return sketchCode;
 };
+

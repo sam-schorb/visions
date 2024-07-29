@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaKey, FaMagic } from 'react-icons/fa';
+import { FaTimes, FaKey, FaMagic, FaEdit, FaSave } from 'react-icons/fa';
 import Link from 'next/link';
 
 const HelpModal = ({ isOpen, onClose }) => {
@@ -156,18 +156,20 @@ const HelpModal = ({ isOpen, onClose }) => {
               <br />
               <ol className="pl-5 list-decimal">
                 <li>Close this window</li>
-                <li>Type whatever you&apos;d like to see into the input box, e.g. &quot;raining blue triangles&quot;</li>
+                <li>Click the &quot;New&quot; button to spawn a random sketch</li>
+                <li>To generate a new sketch, type your idea into the input box, e.g. &quot;raining blue triangles&quot;</li>
                 <li>Click generate (<FaMagic className="inline-block mx-1" />)</li>
                 <li>Play with some sliders</li>
               </ol>
             </div>
             <br />
             <div>
-              <div className="text-xl">Generating a New Sketch:</div>
+              <div className="text-xl">Modifying an existing sketch:</div>
               <br />
               <ol className="pl-5 list-decimal">
-                <li><strong>Create</strong>: Click the &quot;New&quot; button to spawn a random sketch</li>
-                <li><strong>Modify</strong>: Enter a text description and hit &quot;Generate&quot; to apply AI-powered changes</li>
+                <li>Generate a new sketch (<FaMagic className="inline-block mx-1" />)</li>
+                <li>Write a new prompt in the input box, e.g. &quot;Change the colours&quot;</li>
+                <li>Click generate again (<FaMagic className="inline-block mx-1" />)</li>
               </ol>
             </div>
             <br />
@@ -175,8 +177,8 @@ const HelpModal = ({ isOpen, onClose }) => {
               <div className="text-xl">Adjusting Parameters:</div>
               <br />
               <ul className="pl-5 list-disc">
-                <li><strong>Expand</strong>: Click &quot;Add Slider&quot; to introduce new parameter controls</li>
                 <li><strong>Refine</strong>: Drag sliders to fine-tune sketch attributes in real-time</li>
+                <li><strong>Expand</strong>: Click &quot;Add Slider&quot; to introduce new parameter controls</li>
               </ul>
             </div>
             <br />
@@ -185,8 +187,8 @@ const HelpModal = ({ isOpen, onClose }) => {
               <br />
               <ol className="pl-5 list-decimal">
                 <li><strong>Access</strong>: Open the code editor via the &quot;Code&quot; button</li>
-                <li><strong>Modify</strong>: Make direct changes to the P5JS code</li>
-                <li><strong>Apply</strong>: Click &quot;Save&quot; to see your modifications in action</li>
+                <li><strong>Modify</strong>: Click &quot;Edit&quot; (<FaEdit className="inline-block mx-1" />) to make direct changes to the P5JS code</li>
+                <li><strong>Apply</strong>: Click &quot;Save&quot; (<FaSave className="inline-block mx-1" />) to see your modifications in action</li>
               </ol>
             </div>
             <br />
