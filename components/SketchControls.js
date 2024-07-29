@@ -38,11 +38,11 @@ const SketchControls = ({
   showNotification,
   onNanoIdChange,
   onTakeSnapshot,
-
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [placeholder, setPlaceholder] = useState('');
   const [currentNanoId, setCurrentNanoId] = useState(null);
+  const [hasSubmitted, setHasSubmitted] = useState(false); // New state for tracking submissions
 
   useEffect(() => {
     setPlaceholder(placeholders[Math.floor(Math.random() * placeholders.length)]);
@@ -57,7 +57,8 @@ const SketchControls = ({
     if (inputValue.trim()) {
       onSubmit(e, inputValue);
       setInputValue('');
-      setPlaceholder(placeholders[Math.floor(Math.random() * placeholders.length)]);
+      setHasSubmitted(true); // Set hasSubmitted to true when the form is submitted
+      setPlaceholder("Modify sketch, e.g. 'Change the colours' OR Enter new idea..."); // Change placeholder
     }
   };
 
@@ -106,10 +107,16 @@ const SketchControls = ({
     onTakeSnapshot(); // Call the takeSnapshot function
   };
 
+  const handleNewSketchClick = () => {
+    onNewSketch();
+    setHasSubmitted(false); // Reset hasSubmitted state
+    setPlaceholder(placeholders[Math.floor(Math.random() * placeholders.length)]); // Reset placeholder
+  };
+
   return (
     <div>
       <div className="flex flex-wrap justify-between lg:justify-start md:space-x-2 pb-6">
-        <Button variant="default" size="default" onClick={onNewSketch} className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0">
+        <Button variant="default" size="default" onClick={handleNewSketchClick} className="flex-1 md:flex-none flex items-center justify-center md:justify-start space-x-2 mb-2 md:mb-0">
           <FaPlus />
           <span className="hidden md:inline">New</span>
         </Button>
@@ -138,7 +145,7 @@ const SketchControls = ({
               <span className="hidden md:inline">Share</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 bg-white text-black border border-gray-300 rounded shadow-md">
+          <DropdownMenuContent className="w-44 bg-white text-black border border-gray-300 rounded shadow-md">
             <DropdownMenuItem onClick={getEncodedSketchUrl} className="flex items-center space-x-2 px-2 py-2 hover:bg-gray-200 cursor-pointer">
               <FaCopy className="w-4 h-4" />
               <span>Copy to Clipboard</span>

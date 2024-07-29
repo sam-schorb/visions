@@ -2,7 +2,6 @@
 export const INITIAL_SLIDER_VALUE = 50;
 export const RENDER_STILL_DELAY = 2000;
 
-
 export const extractSketchCode = (response) => {
   let sketchCode = response.trim();
 
@@ -33,6 +32,14 @@ export const extractSketchCode = (response) => {
         sketchCode = sketchCode.slice(0, codeEndIndex);
       }
     }
+  }
+
+  // Remove leading and trailing triple backticks
+  if (sketchCode.startsWith('```')) {
+    sketchCode = sketchCode.slice(3).trim();
+  }
+  if (sketchCode.endsWith('```')) {
+    sketchCode = sketchCode.slice(0, -3).trim();
   }
 
   sketchCode = sketchCode.replace(/<\/?code>/g, '').trim();
