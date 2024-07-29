@@ -12,6 +12,7 @@ import SketchDisplay from '../components/SketchDisplay';
 import CodeModal from '../components/CodeModal';
 import HelpModal from '../components/HelpModal';
 import APIModal from '../components/APIModal';
+import ShareModal from '../components/ShareModal'
 import Notification from '../components/Notification';
 
 export default function Home({ initialSketch = null }) {
@@ -23,6 +24,7 @@ export default function Home({ initialSketch = null }) {
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(true);
   const [isAPIModalOpen, setIsAPIModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [modalSketchCode, setModalSketchCode] = useState('');
   const [renderKey, setRenderKey] = useState(0);
   const [paramNames, setParamNames] = useState([]);
@@ -37,6 +39,9 @@ export default function Home({ initialSketch = null }) {
   const [frameHeight, setFrameHeight] = useState(0);
   const [loadedFromUrl, setLoadedFromUrl] = useState(false);
   const [lastSketchNumber, setLastSketchNumber] = useState(null);
+  const [currentNanoId, setCurrentNanoId] = useState(null);
+  const [currentSnapshot, setCurrentSnapshot] = useState(null);
+
 
   const componentRef = useRef(null);
   const sizeRef = useRef({ width: 0, height: 0 });
@@ -54,9 +59,29 @@ export default function Home({ initialSketch = null }) {
     }
   };
 
+  const loadSketchFromKey = async (key) => {
+    try {
+      const response = await fetch(`/api/getSketch?key=${key}`);
+      if (response.ok) {
+        const data = await response.json();
+        const paddedCode = data.encodedCode.replace(/-/g, '+').replace(/_/g, '/') + '=='.slice(0, (4 - data.encodedCode.length % 4) % 4);
+        const decodedSketch = decodeURIComponent(atob(paddedCode));
+        loadSketch(decodedSketch);
+        setModalSketchCode(decodedSketch);
+        setLoadedFromUrl(true);
+      } else {
+        showNotification('Error loading sketch from key.');
+      }
+    } catch (error) {
+      console.error('Error loading sketch from key:', error);
+      showNotification('Error loading sketch from key.');
+    }
+  };
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const sketchKey = urlParams.get('sketch');
   
     if (componentRef.current) {
       const { width, height } = componentRef.current.getBoundingClientRect();
@@ -66,21 +91,26 @@ export default function Home({ initialSketch = null }) {
     }
   
     if (code) {
-      // Use setTimeout to ensure this runs after the state updates
       setTimeout(() => loadSketchFromURL(code), 0);
+    } else if (sketchKey) {
+      setTimeout(() => loadSketchFromKey(sketchKey), 0);
     }
   }, []);
   
   // Add another useEffect to log the frame dimensions when they change
   useEffect(() => {
-    
-    // If there's a code in the URL, load the sketch when dimensions are set
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
-    if (code && frameWidth > 0 && frameHeight > 0) {
-      loadSketchFromURL(code);
+    const sketchKey = urlParams.get('sketch');
+
+    if ((code || sketchKey) && frameWidth > 0 && frameHeight > 0) {
+      if (code) {
+        loadSketchFromURL(code);
+      } else if (sketchKey) {
+        loadSketchFromKey(sketchKey);
+      }
     }
-  }, [frameWidth, frameHeight]);
+  }, [loadedFromUrl]);
 
   const setAndEncodeModalSketchCode = (code) => {
     setModalSketchCode(code);
@@ -144,7 +174,11 @@ export default function Home({ initialSketch = null }) {
   };
 
   useEffect(() => {
-    if (loadNewSketch && !loadedFromUrl) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const sketchKey = urlParams.get('sketch');
+  
+    if (!code && !sketchKey && loadNewSketch && !loadedFromUrl) {
       let sketchNumber;
       do {
         sketchNumber = Math.floor(Math.random() * 5) + 1;
@@ -158,11 +192,11 @@ export default function Home({ initialSketch = null }) {
           script.textContent = sketchCode;
           document.head.appendChild(script);
           document.head.removeChild(script);
-          
+  
           // Now we can access the sketch function from the window object
           const sketchFunction = window[`sketch${sketchNumber}`];
           const wrappedSketchCode = `${sketchFunction.toString()}`;
-          
+  
           setAndEncodeModalSketchCode(wrappedSketchCode);
           loadSketch(wrappedSketchCode);
           setLoadNewSketch(false);
@@ -173,6 +207,7 @@ export default function Home({ initialSketch = null }) {
         });
     }
   }, [loadNewSketch, loadedFromUrl]);
+  
 
   useEffect(() => {
     if (!sketch && !loadedFromUrl) {
@@ -194,7 +229,12 @@ export default function Home({ initialSketch = null }) {
         p5Ref.current = p5Instance;
       } catch (error) {
         console.error('Error creating p5 instance:', error);
-        showNotification('Failed to load sketch. Please try again or edit the code.');
+  
+        if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
+          showNotification('Generated code likely exceeds max length');
+        } else {
+          showNotification('Failed to load sketch. Please try again or edit the code.');
+        }
       }
     }
   
@@ -204,6 +244,7 @@ export default function Home({ initialSketch = null }) {
       }
     };
   }, [sketch, renderKey]);
+  
 
   useEffect(() => {
     if (paramNames.length > 0) {
@@ -232,14 +273,18 @@ export default function Home({ initialSketch = null }) {
 
   const takeSnapshot = () => {
     if (p5Ref.current) {
-      p5Ref.current.loadImage(p5Ref.current.canvas.toDataURL(), (img) => {
-        img.save('snapshot', 'png');
-      });
+      const canvas = p5Ref.current.canvas;
+      // Convert the canvas to a data URL
+      const dataURL = canvas.toDataURL('image/png');
+      
+      // Store the data URL in state
+      setCurrentSnapshot(dataURL);
     }
   };
 
   const handleSubmit = async (event, inputValue) => {
     event.preventDefault();
+    window.history.pushState({}, '', '/');
     setIsLoading(true);
     setAndEncodeModalSketchCode('');
   
@@ -397,6 +442,10 @@ export default function Home({ initialSketch = null }) {
     setIsCodeModalOpen(!isCodeModalOpen);
   };
 
+  const toggleShareModal = () => {
+    setIsShareModalOpen(!isShareModalOpen)
+  }
+
   const toggleHelpModal = () => {
     setIsHelpModalOpen(!isHelpModalOpen);
   };
@@ -454,6 +503,15 @@ export default function Home({ initialSketch = null }) {
     return paramNames.filter(name => !selectedParams.includes(name) || sliders[index].param === name);
   };
 
+  const handleShare = (userInput) => {
+    console.log('Published to Twitter:', userInput);
+    showNotification('Sketch published to Twitter!');
+  };
+
+  const handleNanoIdChange = (newNanoId) => {
+    setCurrentNanoId(newNanoId);
+  };
+
   return (
     <div>
       <Head>
@@ -461,16 +519,16 @@ export default function Home({ initialSketch = null }) {
         <meta name="description" content="Render p5.js sketches in a Next.js app" />
       </Head>
       <main ref={componentRef} className="flex flex-col w-full items-center lg:flex-row lg:items-start h-screen">
-        <div className="flex justify-center">
-          <Canvas
-            sketchRef={sketchRef}
-            renderKey={renderKey}
-            isFullscreen={isFullscreen}
-            onToggleFullscreen={toggleFullscreen}
-            frameWidth={frameWidth}
-            frameHeight={frameHeight}
-          />
-        </div>
+      <div className="flex justify-center">
+            <Canvas
+              sketchRef={sketchRef}
+              renderKey={renderKey}
+              isFullscreen={isFullscreen}
+              onToggleFullscreen={toggleFullscreen}
+              frameWidth={frameWidth}
+              frameHeight={frameHeight}
+            />
+          </div>
         {!isFullscreen && (
           <div className="md:p-10 p-4 w-full lg:w-auto">
             <SketchControls
@@ -483,11 +541,15 @@ export default function Home({ initialSketch = null }) {
               onToggleCodeModal={toggleCodeModal}
               onToggleHelpModal={toggleHelpModal}
               onToggleAPIModal={handleToggleAPIModal}
+              onToggleShareModal={toggleShareModal}
               onResetSketch={resetSketch}
               isLoading={isLoading}
               onNewSketch={handleNewSketch}  // Updated this line
               modalSketchCode={modalSketchCode}
               showNotification={showNotification}
+              onNanoIdChange={handleNanoIdChange} // Add this prop
+              onTakeSnapshot={takeSnapshot}
+
             />
             <div>
               <SketchDisplay
@@ -520,6 +582,14 @@ export default function Home({ initialSketch = null }) {
         message={notification.message}
         isVisible={notification.isVisible}
         onClose={closeNotification}
+      />
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={toggleShareModal}
+        onShare={handleShare}
+        currentNanoId={currentNanoId} // Pass currentNanoId to ShareModal
+        modalSketchCode={modalSketchCode}
+        currentSnapshot={currentSnapshot}
       />
     </div>
   );

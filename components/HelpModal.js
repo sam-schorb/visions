@@ -138,7 +138,7 @@ const HelpModal = ({ isOpen, onClose }) => {
                 />
               </div>
             </Link>
-            <h2 className="text-white text-2xl">HELP</h2>
+            <h2 className="text-white text-2xl">VISIONS</h2>
             <button id="close-button" onClick={closeModalWithTransition} className="absolute top-4 right-5 text-black">
               <FaTimes />
             </button>
