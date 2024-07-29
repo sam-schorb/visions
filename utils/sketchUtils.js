@@ -45,3 +45,4 @@ export const extractSketchCode = (response) => {
   sketchCode = sketchCode.replace(/<\/?code>/g, '').trim();
   return sketchCode;
 };
+
