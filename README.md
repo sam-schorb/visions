@@ -11,8 +11,6 @@
 
 ## Overview
 
-**Visions** is an innovative platform that enables users to create generative art sketches using P5JS and artificial intelligence. Designed with accessibility in mind, it caters to both novices and experienced creators, offering an intuitive interface for crafting, editing, and customizing sketches through AI-powered suggestions.
-
 ## Features
 
 ### 🎨 Generating Visions
